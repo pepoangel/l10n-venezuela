@@ -453,7 +453,7 @@ class TestAccountMovePostDiscountRefundCurrency(L10nVeLoyaltyCommon):
                     Command.create(
                         {
                             "product_id": self.product_iva_16.id,
-                            "name": "Linea %s" % idx,
+                            "name": f"Linea {idx}",
                             "quantity": qty,
                             "price_unit": price,
                             "account_id": self.company_data[
@@ -608,8 +608,6 @@ class TestAccountMovePostDiscountRefundCurrency(L10nVeLoyaltyCommon):
                 currency.round(invoice_totals.get(key) or 0.0),
             )
 
-
-
     def _create_usd_invoice_draft(self, date_invoice, prices, discounts=None):
         discounts = discounts or [0.0] * len(prices)
         lines = []
@@ -742,7 +740,7 @@ class TestAccountMovePostDiscountRefundCurrency(L10nVeLoyaltyCommon):
                     Command.create(
                         {
                             "product_id": self.product_iva_16.id,
-                            "name": "Linea %s" % idx,
+                            "name": f"Linea {idx}",
                             "quantity": qty,
                             "price_unit": price,
                             "account_id": self.company_data[

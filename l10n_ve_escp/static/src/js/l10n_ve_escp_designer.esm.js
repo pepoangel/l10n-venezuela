@@ -1,4 +1,11 @@
-import {Component, onMounted, onWillStart, onWillUnmount, useRef, useState} from "@odoo/owl";
+import {
+    Component,
+    onMounted,
+    onWillStart,
+    onWillUnmount,
+    useRef,
+    useState,
+} from "@odoo/owl";
 import {ConfirmationDialog} from "@web/core/confirmation_dialog/confirmation_dialog";
 import {_t} from "@web/core/l10n/translation";
 import {registry} from "@web/core/registry";
@@ -7,7 +14,6 @@ import {useService} from "@web/core/utils/hooks";
 
 const CELL_W = 7;
 const CELL_H = 16;
-const BAND_BAR_H = 22;
 const HISTORY_LIMIT = 60;
 
 const OBJECT_DEFAULTS = {
@@ -30,7 +36,8 @@ export class L10nVeEscpDesigner extends Component {
         this.notification = useService("notification");
         this.dialog = useService("dialog");
         this.canvasRef = useRef("canvas");
-        this.reportId = this.props.action.params?.report_id || this.props.action.context?.active_id;
+        this.reportId =
+            this.props.action.params?.report_id || this.props.action.context?.active_id;
         this.tempId = -1;
         this.history = [];
         this.drag = null;
@@ -75,7 +82,9 @@ export class L10nVeEscpDesigner extends Component {
             this.notification.add(_t("Falta el reporte a diseñar."), {type: "danger"});
             return;
         }
-        const data = await this.orm.call("l10n.ve.escp.report", "designer_load", [[this.reportId]]);
+        const data = await this.orm.call("l10n.ve.escp.report", "designer_load", [
+            [this.reportId],
+        ]);
         this.applyData(data);
         this.state.loading = false;
     }
@@ -129,7 +138,9 @@ export class L10nVeEscpDesigner extends Component {
             this.applyData(data);
             this.notification.add(_t("Diseño guardado."), {type: "success"});
         } catch (error) {
-            this.notification.add(error?.data?.message || String(error), {type: "danger"});
+            this.notification.add(error?.data?.message || String(error), {
+                type: "danger",
+            });
         }
     }
 
@@ -155,12 +166,16 @@ export class L10nVeEscpDesigner extends Component {
             await this.save();
         }
         try {
-            const action = await this.orm.call("l10n.ve.escp.report", "action_preview_sample", [
-                [this.reportId],
-            ]);
+            const action = await this.orm.call(
+                "l10n.ve.escp.report",
+                "action_preview_sample",
+                [[this.reportId]]
+            );
             await this.action.doAction(action);
         } catch (error) {
-            this.notification.add(error?.data?.message || String(error), {type: "danger"});
+            this.notification.add(error?.data?.message || String(error), {
+                type: "danger",
+            });
         }
     }
 
@@ -169,12 +184,16 @@ export class L10nVeEscpDesigner extends Component {
             await this.save();
         }
         try {
-            const action = await this.orm.call("l10n.ve.escp.report", "action_print_sample", [
-                [this.reportId],
-            ]);
+            const action = await this.orm.call(
+                "l10n.ve.escp.report",
+                "action_print_sample",
+                [[this.reportId]]
+            );
             await this.action.doAction(action);
         } catch (error) {
-            this.notification.add(error?.data?.message || String(error), {type: "danger"});
+            this.notification.add(error?.data?.message || String(error), {
+                type: "danger",
+            });
         }
     }
 
@@ -188,7 +207,9 @@ export class L10nVeEscpDesigner extends Component {
                 "download_layout_export",
                 [[this.reportId]]
             );
-            const blob = new Blob([result.content], {type: "application/json;charset=utf-8"});
+            const blob = new Blob([result.content], {
+                type: "application/json;charset=utf-8",
+            });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -197,7 +218,9 @@ export class L10nVeEscpDesigner extends Component {
             URL.revokeObjectURL(url);
             this.notification.add(_t("Diseño exportado."), {type: "success"});
         } catch (error) {
-            this.notification.add(error?.data?.message || String(error), {type: "danger"});
+            this.notification.add(error?.data?.message || String(error), {
+                type: "danger",
+            });
         }
     }
 
@@ -373,7 +396,11 @@ export class L10nVeEscpDesigner extends Component {
 
     get selectedBand() {
         if (this.state.selectedBandId) {
-            return this.state.bands.find((band) => band.id === this.state.selectedBandId) || null;
+            return (
+                this.state.bands.find(
+                    (band) => band.id === this.state.selectedBandId
+                ) || null
+            );
         }
         return null;
     }
@@ -445,7 +472,9 @@ export class L10nVeEscpDesigner extends Component {
             return;
         }
         this.snapshot();
-        found.band.objects = found.band.objects.filter((item) => item.id !== found.obj.id);
+        found.band.objects = found.band.objects.filter(
+            (item) => item.id !== found.obj.id
+        );
         if (found.obj.id > 0) {
             this.state.deletedObjectIds.push(found.obj.id);
         }
@@ -455,7 +484,9 @@ export class L10nVeEscpDesigner extends Component {
     addBand() {
         const bandType = this.state.newBandType;
         if (this.state.bands.some((band) => band.band_type === bandType)) {
-            this.notification.add(_t("Ya existe una banda de ese tipo."), {type: "warning"});
+            this.notification.add(_t("Ya existe una banda de ese tipo."), {
+                type: "warning",
+            });
             return;
         }
         this.snapshot();
@@ -469,7 +500,9 @@ export class L10nVeEscpDesigner extends Component {
             objects: [],
         };
         this.state.bands.push(band);
-        this.state.bands.sort((a, b) => order.indexOf(a.band_type) - order.indexOf(b.band_type));
+        this.state.bands.sort(
+            (a, b) => order.indexOf(a.band_type) - order.indexOf(b.band_type)
+        );
         this.selectBand(band);
     }
 
@@ -479,7 +512,11 @@ export class L10nVeEscpDesigner extends Component {
         }
         this.dialog.add(ConfirmationDialog, {
             title: _t("Eliminar banda"),
-            body: _t("Se eliminará la banda %s y sus %s objetos. ¿Continuar?", this.bandLabel(band.band_type), band.objects.length),
+            body: _t(
+                "Se eliminará la banda %s y sus %s objetos. ¿Continuar?",
+                this.bandLabel(band.band_type),
+                band.objects.length
+            ),
             confirmLabel: _t("Eliminar"),
             confirm: () => this.removeBand(band),
             cancel: () => null,
@@ -633,12 +670,17 @@ export class L10nVeEscpDesigner extends Component {
             if (clientY >= rect.top && clientY < rect.bottom) {
                 const targetId = Number(el.dataset.bandId);
                 if (targetId !== band.id) {
-                    const target = this.state.bands.find((item) => item.id === targetId);
+                    const target = this.state.bands.find(
+                        (item) => item.id === targetId
+                    );
                     if (!target) {
                         return;
                     }
                     band.objects = band.objects.filter((item) => item.id !== obj.id);
-                    obj.row = Math.max(0, Math.floor((clientY - rect.top) / this.cellH));
+                    obj.row = Math.max(
+                        0,
+                        Math.floor((clientY - rect.top) / this.cellH)
+                    );
                     target.objects.push(obj);
                     this.state.selectedBandId = target.id;
                     this.drag.startRow = obj.row;
@@ -678,9 +720,12 @@ export class L10nVeEscpDesigner extends Component {
         if (!found) {
             return;
         }
-        const step = {ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0]}[
-            ev.key
-        ];
+        const step = {
+            ArrowLeft: [0, -1],
+            ArrowRight: [0, 1],
+            ArrowUp: [-1, 0],
+            ArrowDown: [1, 0],
+        }[ev.key];
         if (step) {
             ev.preventDefault();
             this.snapshot();
@@ -711,7 +756,10 @@ export class L10nVeEscpDesigner extends Component {
     }
 
     zoomOut() {
-        this.state.zoom = Math.max(0.5, Math.round((this.state.zoom - 0.25) * 100) / 100);
+        this.state.zoom = Math.max(
+            0.5,
+            Math.round((this.state.zoom - 0.25) * 100) / 100
+        );
     }
 }
 

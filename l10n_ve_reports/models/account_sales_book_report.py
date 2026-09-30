@@ -757,7 +757,8 @@ class SalesBookReportCustomHandler(models.AbstractModel):
                 ):
                     line_columns.append(
                         report._build_column_dict(
-                            section_data.get("base_invoices", 0.0),
+                            section_data.get("base_invoices", 0.0)
+                            - section_data.get("base_credits", 0.0),
                             column,
                             options=options,
                         )
@@ -767,7 +768,8 @@ class SalesBookReportCustomHandler(models.AbstractModel):
                 ):
                     line_columns.append(
                         report._build_column_dict(
-                            section_data.get("amount_invoices", 0.0),
+                            section_data.get("amount_invoices", 0.0)
+                            - section_data.get("amount_credits", 0.0),
                             column,
                             options=options,
                         )

@@ -1098,7 +1098,7 @@ class TestIgtfPaymentFlows(TestL10nVeIgtfCommon):
             places=2,
         )
 
-    def test_credit_note_in_company_currency_shows_igtf_in_bs(self):
+    def test_credit_note_keeps_document_currency_and_origin_igtf(self):
         self.company.l10n_ve_igtf_allow_invoice_accrual = True
         self.sale_journal.write(
             {
@@ -1128,7 +1128,7 @@ class TestIgtfPaymentFlows(TestL10nVeIgtfCommon):
                                 "quantity": 1.0,
                                 "price_unit": 100.0,
                                 "account_id": self.revenue_account.id,
-                                "tax_ids": [Command.clear()],
+                                "tax_ids": [Command.set(self.exempt_sale_tax.ids)],
                             }
                         )
                     ],
@@ -1138,35 +1138,44 @@ class TestIgtfPaymentFlows(TestL10nVeIgtfCommon):
         invoice.action_post()
         origin_igtf_lines = invoice._l10n_ve_igtf_aml()
         origin_igtf_balance = abs(sum(origin_igtf_lines.mapped("balance")))
+        origin_igtf_currency = abs(sum(origin_igtf_lines.mapped("amount_currency")))
         self.assertGreater(origin_igtf_balance, 0.0)
 
         credit_note = invoice._reverse_moves()[0]
         credit_note._l10n_ve_force_refund_to_company_currency()
         credit_note.invalidate_recordset()
-        self.assertEqual(credit_note.currency_id, self.ves)
+        self.assertEqual(credit_note.currency_id, invoice.currency_id)
         self.assertTrue(credit_note._l10n_ve_igtf_aml())
         self.assertTrue(credit_note.l10n_ve_igtf_invoice_has_igtf_accrual())
 
         cn_igtf_lines = credit_note._l10n_ve_igtf_aml()
-        cn_igtf_balance = sum(cn_igtf_lines.mapped("balance"))
-        self.assertAlmostEqual(cn_igtf_balance, origin_igtf_balance, places=2)
         self.assertAlmostEqual(
-            cn_igtf_lines.amount_currency,
+            abs(sum(cn_igtf_lines.mapped("balance"))),
             origin_igtf_balance,
+            places=2,
+        )
+        self.assertAlmostEqual(
+            abs(sum(cn_igtf_lines.mapped("amount_currency"))),
+            origin_igtf_currency,
             places=2,
         )
 
         cn_igtf_cur, cn_igtf_comp = credit_note._l10n_ve_igtf_get_collected_amounts(
             include_base=False
         )
-        self.assertAlmostEqual(cn_igtf_cur, origin_igtf_balance, places=2)
-        self.assertAlmostEqual(cn_igtf_comp, origin_igtf_balance, places=2)
+        self.assertAlmostEqual(abs(cn_igtf_cur), origin_igtf_currency, places=2)
+        self.assertAlmostEqual(abs(cn_igtf_comp), origin_igtf_balance, places=2)
 
         igtf_group = self._get_igtf_group_from_tax_totals(credit_note)
         self.assertTrue(igtf_group)
         self.assertGreater(igtf_group.get("tax_amount_currency", 0.0), 0.0)
         self.assertAlmostEqual(
             igtf_group.get("tax_amount_currency", 0.0),
+            origin_igtf_currency,
+            places=2,
+        )
+        self.assertAlmostEqual(
+            igtf_group.get("tax_amount", 0.0),
             origin_igtf_balance,
             places=2,
         )
@@ -1197,7 +1206,7 @@ class TestIgtfPaymentFlows(TestL10nVeIgtfCommon):
                                 "quantity": 1.0,
                                 "price_unit": 100.0,
                                 "account_id": self.revenue_account.id,
-                                "tax_ids": [Command.clear()],
+                                "tax_ids": [Command.set(self.exempt_sale_tax.ids)],
                             }
                         )
                     ],
@@ -1232,7 +1241,7 @@ class TestIgtfPaymentFlows(TestL10nVeIgtfCommon):
                                 "quantity": 1.0,
                                 "price_unit": 100.0,
                                 "account_id": self.revenue_account.id,
-                                "tax_ids": [Command.clear()],
+                                "tax_ids": [Command.set(self.exempt_sale_tax.ids)],
                             }
                         )
                     ],
@@ -1340,7 +1349,7 @@ class TestIgtfPaymentFlows(TestL10nVeIgtfCommon):
                                 "account_id": self.company_data_ve[
                                     "default_account_expense"
                                 ].id,
-                                "tax_ids": [Command.clear()],
+                                "tax_ids": [Command.set(self.exempt_purchase_tax.ids)],
                             }
                         )
                     ],

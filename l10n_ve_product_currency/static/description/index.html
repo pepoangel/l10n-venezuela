@@ -370,48 +370,70 @@ ul.auto-toc {
 !! source digest: sha256:48a57b0cebd947b17b46b8d745150a77230ffee7f232c1df372a4beb0e459124
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/lgpl-3.0-standalone.html"><img alt="License: LGPL-3" src="https://img.shields.io/badge/licence-LGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/OCA/l10n-venezuela/tree/18.0/l10n_ve_product_currency"><img alt="OCA/l10n-venezuela" src="https://img.shields.io/badge/github-OCA%2Fl10n--venezuela-lightgray.png?logo=github" /></a> <a class="reference external image-reference" href="https://translation.odoo-community.org/projects/l10n-venezuela-18-0/l10n-venezuela-18-0-l10n_ve_product_currency"><img alt="Translate me on Weblate" src="https://img.shields.io/badge/weblate-Translate%20me-F47D42.png" /></a> <a class="reference external image-reference" href="https://runboat.odoo-community.org/builds?repo=OCA/l10n-venezuela&amp;target_branch=18.0"><img alt="Try me on Runboat" src="https://img.shields.io/badge/runboat-Try%20me-875A7B.png" /></a></p>
-<p>Allows selecting a currency on product templates for sales and cost
-amounts. When no product currency is selected, Odoo uses the product
-company currency.</p>
+<p>Allows selecting independent currencies on product templates for the
+sales price and for the cost.</p>
+<p>When no sales or cost currency is selected, Odoo uses the product
+company currency. PBA costs keep using the product cost currency.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
 <li><a class="reference internal" href="#use-cases-context" id="toc-entry-1">Use Cases / Context</a></li>
-<li><a class="reference internal" href="#usage" id="toc-entry-2">Usage</a></li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-3">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-4">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-5">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-6">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-7">Maintainers</a></li>
+<li><a class="reference internal" href="#configuration" id="toc-entry-2">Configuration</a></li>
+<li><a class="reference internal" href="#usage" id="toc-entry-3">Usage</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-4">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-5">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-6">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-7">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-8">Maintainers</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="use-cases-context">
 <h1><a class="toc-backref" href="#toc-entry-1">Use Cases / Context</a></h1>
-<p>In Venezuelan deployments, product prices are commonly managed in a
-currency different from the company currency. This module lets users
-define that currency per product while keeping the company currency as
-the fallback.</p>
+<p>In Venezuelan deployments, sales prices and costs are commonly managed
+in currencies different from the company currency, and those two
+currencies are not always the same.</p>
+<p>This module lets users force a sales price currency and a cost currency
+per product, with company currency as the fallback. Existing products
+can be migrated from their current currency to a destination currency
+without changing the cost currency unless requested.</p>
 </div>
-<div class="section" id="usage">
-<h1><a class="toc-backref" href="#toc-entry-2">Usage</a></h1>
-<p>To configure the default product currency:</p>
+<div class="section" id="configuration">
+<h1><a class="toc-backref" href="#toc-entry-2">Configuration</a></h1>
+<p>To configure the default product currencies:</p>
 <ol class="arabic simple">
 <li>Go to Settings &gt; Product.</li>
-<li>In Default product currency, select the currency to use on new
-products.</li>
-<li>Leave the field empty to use the company currency.</li>
+<li>In Default sales price currency, select the currency for new product
+sales prices.</li>
+<li>In Default cost currency, select the currency for new product costs.</li>
+<li>Leave either field empty to use the company currency.</li>
 </ol>
-<p>To set a currency on a product:</p>
+<p>To migrate existing products:</p>
 <ol class="arabic simple">
-<li>Go to Products and open a product.</li>
-<li>In Product Currency, select the currency to use for that product.</li>
-<li>Leave Product Currency empty to use the product company currency.</li>
+<li>Go to Settings &gt; Product.</li>
+<li>Click Migrate products.</li>
+<li>Choose the current and destination currencies for the sales price
+and/or the cost.</li>
+<li>Leave Migrate Cost Currency disabled to keep the current cost
+currency.</li>
 </ol>
 </div>
+<div class="section" id="usage">
+<h1><a class="toc-backref" href="#toc-entry-3">Usage</a></h1>
+<p>To set currencies on a product:</p>
+<ol class="arabic simple">
+<li>Go to Products and open a product.</li>
+<li>In Sales Price Currency, select the currency for the sales price.</li>
+<li>In Forced Cost Currency, select the currency for the cost.</li>
+<li>Leave either field empty to use the product company currency.</li>
+</ol>
+<p>Changing a forced currency converts the corresponding amount (sales
+price or cost) from the previous currency to the new one using the
+company rate of today.</p>
+</div>
 <div class="section" id="bug-tracker">
-<h1><a class="toc-backref" href="#toc-entry-3">Bug Tracker</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-4">Bug Tracker</a></h1>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/OCA/l10n-venezuela/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -419,21 +441,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h1><a class="toc-backref" href="#toc-entry-4">Credits</a></h1>
+<h1><a class="toc-backref" href="#toc-entry-5">Credits</a></h1>
 <div class="section" id="authors">
-<h2><a class="toc-backref" href="#toc-entry-5">Authors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-6">Authors</a></h2>
 <ul class="simple">
 <li>Andyengit</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h2><a class="toc-backref" href="#toc-entry-6">Contributors</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-7">Contributors</a></h2>
 <ul class="simple">
 <li>andyengit</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h2><a class="toc-backref" href="#toc-entry-7">Maintainers</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-8">Maintainers</a></h2>
 <p>This module is maintained by the OCA.</p>
 <a class="reference external image-reference" href="https://odoo-community.org">
 <img alt="Odoo Community Association" src="https://odoo-community.org/logo.png" />

@@ -5,7 +5,8 @@ async function escpReportHandler(action, options, env) {
         return false;
     }
     const context = action.context || {};
-    const activeIds = context.active_ids || (context.active_id ? [context.active_id] : []);
+    const activeIds =
+        context.active_ids || (context.active_id ? [context.active_id] : []);
     await env.services.action.doAction(
         {
             type: "ir.actions.act_window",

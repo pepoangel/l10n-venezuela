@@ -31,8 +31,8 @@ Product Currency
 Allows selecting independent currencies on product templates for the
 sales price and for the cost.
 
-When no sales or cost currency is selected, Odoo uses the product company
-currency. PBA costs keep using the product cost currency.
+When no sales or cost currency is selected, Odoo uses the product
+company currency. PBA costs keep using the product cost currency.
 
 **Table of contents**
 
@@ -42,14 +42,14 @@ currency. PBA costs keep using the product cost currency.
 Use Cases / Context
 ===================
 
-In Venezuelan deployments, sales prices and costs are commonly managed in
-currencies different from the company currency, and those two currencies
-are not always the same.
+In Venezuelan deployments, sales prices and costs are commonly managed
+in currencies different from the company currency, and those two
+currencies are not always the same.
 
 This module lets users force a sales price currency and a cost currency
-per product, with company currency as the fallback. Existing products can
-be migrated from their current currency to a destination currency without
-changing the cost currency unless requested.
+per product, with company currency as the fallback. Existing products
+can be migrated from their current currency to a destination currency
+without changing the cost currency unless requested.
 
 Configuration
 =============
@@ -68,7 +68,8 @@ To migrate existing products:
 2. Click Migrate products.
 3. Choose the current and destination currencies for the sales price
    and/or the cost.
-4. Leave Migrate Cost Currency disabled to keep the current cost currency.
+4. Leave Migrate Cost Currency disabled to keep the current cost
+   currency.
 
 Usage
 =====
@@ -80,9 +81,9 @@ To set currencies on a product:
 3. In Forced Cost Currency, select the currency for the cost.
 4. Leave either field empty to use the product company currency.
 
-Changing a forced currency converts the corresponding amount (sales price
-or cost) from the previous currency to the new one using the company rate
-of today.
+Changing a forced currency converts the corresponding amount (sales
+price or cost) from the previous currency to the new one using the
+company rate of today.
 
 Bug Tracker
 ===========

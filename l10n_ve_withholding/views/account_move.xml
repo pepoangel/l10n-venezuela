@@ -258,11 +258,7 @@
                             widget="monetary"
                             options="{'currency_field': 'company_currency_id'}"
                         />
-                        <field
-                            name="related_pay_from"
-                            force_save="1"
-                            readonly="1"
-                        />
+                        <field name="related_pay_from" force_save="1" readonly="1" />
                         <field
                             name="related_percentage_tax_base"
                             force_save="1"

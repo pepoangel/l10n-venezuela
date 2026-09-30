@@ -95,7 +95,9 @@ def totals_namespace(move):
     comp_currency = move.company_currency_id
     dual = comp_currency != doc_currency
     totals, vat_group, igtf_group, exempt_groups = tax_totals_groups(move)
-    doc_values = totals_values(totals, vat_group, igtf_group, exempt_groups, "_currency")
+    doc_values = totals_values(
+        totals, vat_group, igtf_group, exempt_groups, "_currency"
+    )
     comp_values = totals_values(totals, vat_group, igtf_group, exempt_groups, "")
     doc = Namespace()
     comp = Namespace()

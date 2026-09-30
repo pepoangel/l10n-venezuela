@@ -12,9 +12,7 @@ class TestIslrConceptCode(L10nVeSeniatCommon):
         cls.concept = cls.env.ref(
             "l10n_ve_withholding.payment_concept_three_l10n_ve_withholding"
         )
-        cls.type_pn = cls.env.ref(
-            "l10n_ve_withholding.type_person_l10n_ve_withholding"
-        )
+        cls.type_pn = cls.env.ref("l10n_ve_withholding.type_person_l10n_ve_withholding")
         cls.type_pj = cls.env.ref(
             "l10n_ve_withholding.type_person_three_l10n_ve_withholding"
         )

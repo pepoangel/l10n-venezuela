@@ -15,7 +15,7 @@ FRX_EXPRESSION_MAP = {
     "documento": "invoice_number",
     "emision": "emission",
     'padl(_pageno,3,"0")': "'%03d' % page",
-    "nRegistro1+\":\"": "'R.I.F. :'",
+    'nRegistro1+":"': "'R.I.F. :'",
     "marca": "pl.brand",
     "REFERENCIA": "pl.ref",
     "cantidad": "pl.qty",
@@ -44,15 +44,30 @@ FRX_EXPRESSION_MAP = {
     "bIGTF": "tot.comp.igtf_base",
     "(bIGTF/factorreferencial)": "tot.doc.igtf_base",
     '"Monto en "+monnacsimb2': "doc_currency.name if dual_currency else ''",
-    '"Monto en "+simbolomoneda': "comp_currency.name if dual_currency else doc_currency.name",
-    'IIf( escredito=1, "CREDITO a "+transform(vence-emision,"9999")+" Dias","CONTADO")': "payment_term",
+    '"Monto en "+simbolomoneda': (
+        "comp_currency.name if dual_currency else doc_currency.name"
+    ),
+    (
+        'IIf( escredito=1, "CREDITO a "+transform(vence-emision,"9999")'
+        '+" Dias","CONTADO")'
+    ): "payment_term",
     'horadocum+iif(ampm = 1,"AM","PM")': "''",
     "UPPER(nSelEmpresa)": "upper(company.name)",
     'alltrim(nnomfiscal1)+": "+ alltrim(nrif)': "'RIF: ' + (company.vat or '')",
-    'iif(formafis = 4,alltrim(nombre1),alltrim(nombre1)+iif(baseimpo5 > 0, " (P)",iif(timpueprc = 0, " (E)",iif(timpueprc = 16, " (G)",iif(timpueprc = 8, " (R)",iif(timpueprc = 31, " (A)", " "))))))': "pl.desc",
-    '"Descuento"+STR((totdescuen*100/totbruto),6,2)+"% (-):"': "('Descuento %s (-):' % discount_percent).replace('  ', ' ')",
+    (
+        'iif(formafis = 4,alltrim(nombre1),alltrim(nombre1)+iif(baseimpo5 > 0, " (P)",'
+        'iif(timpueprc = 0, " (E)",iif(timpueprc = 16, " (G)",'
+        'iif(timpueprc = 8, " (R)",iif(timpueprc = 31, " (A)", " "))))))'
+    ): "pl.desc",
+    '"Descuento"+STR((totdescuen*100/totbruto),6,2)+"% (-):"': (
+        "('Descuento %s (-):' % discount_percent).replace('  ', ' ')"
+    ),
     'iif(formafis = 4,"Base Imponible 0%","Exento (+):")': "'Exento (+):'",
-    '"Son: "+alltrim(simbolomoneda)+"  "+ StringMonto(  iif(factorcamb=0, totalfinal,iif(multi_div=1,totalfinal / factorcamb, totalfinal * factorcamb)))': "amount_words",
+    (
+        '"Son: "+alltrim(simbolomoneda)+"  "+ StringMonto(  iif(factorcamb=0, '
+        "totalfinal,iif(multi_div=1,totalfinal / factorcamb, "
+        "totalfinal * factorcamb)))"
+    ): "amount_words",
 }
 
 
@@ -90,7 +105,8 @@ class AccountMove(models.Model):
             raise UserError(
                 _(
                     "No hay un reporte ESC/P para facturas. Cree uno en "
-                    "Contabilidad > Configuración > Reportes ESC/P y asígnelo al diario."
+                    "Contabilidad > Configuración > Reportes ESC/P "
+                    "y asígnelo al diario."
                 )
             )
         return report._preview_action(self)

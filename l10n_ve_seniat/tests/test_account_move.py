@@ -1617,10 +1617,10 @@ class TestAccountMove(L10nVeSeniatCommon):
             self._create_invoice_vals(self.partner_ve)
         )
         move.action_post()
-        if hasattr(move, "l10n_ve_invoice_escp_get_payload"):
+        if hasattr(move, "_l10n_ve_escp_is_continuous_eligible"):
             action = move.action_print_pdf()
-            self.assertEqual(action.get("type"), "ir.actions.client")
-            self.assertEqual(action.get("tag"), "l10n_ve_invoice_escp_print")
+            self.assertEqual(action.get("type"), "ir.actions.act_window")
+            self.assertEqual(action.get("res_model"), "l10n.ve.escp.preview")
             return
         with self.assertRaises(UserError) as cm:
             move.action_print_pdf()

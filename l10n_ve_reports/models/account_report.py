@@ -3850,6 +3850,33 @@ class AccountReport(models.Model):
         column["format_params"] = format_params
         column["is_zero"] = self._is_value_zero(value, "monetary", format_params)
 
+    def _sum_converted_child_column(
+        self, options, child_lines, col_idx, document_dates, display_currency
+    ):
+        converted_total = 0.0
+        has_child_values = False
+        for child in child_lines:
+            child_cols = child.get("columns", [])
+            if col_idx >= len(child_cols):
+                continue
+            child_col = child_cols[col_idx]
+            if not child_col:
+                continue
+            child_value = child_col.get("no_format")
+            if child_value is None:
+                continue
+            has_child_values = True
+            if child_value == 0:
+                continue
+            converted_total += self._convert_column_value_to_display_currency(
+                options,
+                child_value,
+                child_col.get("format_params"),
+                document_dates.get(child.get("id", "")),
+                display_currency,
+            )
+        return converted_total, has_child_values
+
     def _write_converted_totals_from_child_lines(
         self, options, line_dict, child_lines, document_dates, display_currency
     ):
@@ -3876,28 +3903,9 @@ class AccountReport(models.Model):
             if expr_label == "balance" and has_amount_column:
                 balance_col_idx = col_idx
                 continue
-            converted_total = 0.0
-            has_child_values = False
-            for child in child_lines:
-                child_cols = child.get("columns", [])
-                if col_idx >= len(child_cols):
-                    continue
-                child_col = child_cols[col_idx]
-                if not child_col:
-                    continue
-                child_value = child_col.get("no_format")
-                if child_value is None:
-                    continue
-                has_child_values = True
-                if child_value == 0:
-                    continue
-                converted_total += self._convert_column_value_to_display_currency(
-                    options,
-                    child_value,
-                    child_col.get("format_params"),
-                    document_dates.get(child.get("id", "")),
-                    display_currency,
-                )
+            converted_total, has_child_values = self._sum_converted_child_column(
+                options, child_lines, col_idx, document_dates, display_currency
+            )
             if has_child_values:
                 self._apply_converted_column_value(
                     parent_col, converted_total, display_currency
@@ -4025,8 +4033,7 @@ class AccountReport(models.Model):
         top_level_sources = [
             line
             for line in line_dict_list
-            if not line.get("parent_id")
-            and self._get_markup(line.get("id")) != "total"
+            if not line.get("parent_id") and self._get_markup(line.get("id")) != "total"
         ]
         if not top_level_sources:
             return

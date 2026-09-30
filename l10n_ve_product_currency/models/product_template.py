@@ -8,7 +8,10 @@ class ProductTemplate(models.Model):
         "res.currency",
         "Sales Price Currency",
         default=lambda self: self._default_force_currency_id(),
-        help="Forced currency for the sales price. If empty, the company currency is used.",
+        help=(
+            "Forced currency for the sales price. "
+            "If empty, the company currency is used."
+        ),
     )
     force_cost_currency_id = fields.Many2one(
         "res.currency",
@@ -22,9 +25,7 @@ class ProductTemplate(models.Model):
     )
 
     def _l10n_ve_param_currency(self, param_name):
-        currency_id = (
-            self.env["ir.config_parameter"].sudo().get_param(param_name)
-        )
+        currency_id = self.env["ir.config_parameter"].sudo().get_param(param_name)
         try:
             return self.env["res.currency"].browse(int(currency_id)).exists()
         except (TypeError, ValueError):

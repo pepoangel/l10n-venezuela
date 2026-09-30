@@ -2662,12 +2662,14 @@ Please create a credit note instead.
             and move.reversed_entry_id.currency_id == move.currency_id
         )
         others = self - refunds
+        res = None
         if others:
-            super(AccountMove, others).refresh_invoice_currency_rate()
+            res = super(AccountMove, others).refresh_invoice_currency_rate()
         if refunds and hasattr(
             refunds, "_l10n_ve_lock_refund_invoice_currency_rate_from_origin"
         ):
             refunds._l10n_ve_lock_refund_invoice_currency_rate_from_origin()
+        return res
 
     @api.depends(
         "currency_id",
@@ -3252,9 +3254,7 @@ Please create a credit note instead.
             default_values_list=default_values_list, cancel=cancel
         )
         if not cancel:
-            reverse_moves = reverse_moves.with_context(
-                l10n_ve_skip_refund_realign=True
-            )
+            reverse_moves = reverse_moves.with_context(l10n_ve_skip_refund_realign=True)
             reverse_moves._l10n_ve_apply_remaining_credit_note_lines()
             if hasattr(
                 reverse_moves, "_l10n_ve_lock_refund_invoice_currency_rate_from_origin"

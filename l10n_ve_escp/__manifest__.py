@@ -2,7 +2,10 @@
     "name": "Venezuela — Motor de reportes ESC/P (impresoras matriz)",
     "version": "18.0.1.1.0",
     "category": "Technical",
-    "summary": "Reportes ESC/P por bandas para Epson matriz: diseño, vista previa PDF e impresión WebUSB",
+    "summary": (
+        "Reportes ESC/P por bandas para Epson matriz: diseño, "
+        "vista previa PDF e impresión WebUSB"
+    ),
     "author": "andyengit, Odoo Community Association (OCA)",
     "maintainer": "andyengit",
     "website": "https://github.com/OCA/l10n-venezuela",

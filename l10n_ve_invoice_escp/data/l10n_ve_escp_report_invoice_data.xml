@@ -11,7 +11,9 @@
         <field name="print_quality">draft_double</field>
         <field name="margin_top_lines">0</field>
         <field name="show_in_print_menu" eval="True" />
-        <field name="note">Portado del reporte Visual FoxPro factur01.frx: encabezado 14 filas, títulos 1, detalle 35 renglones, pie 16 = 66 líneas en carta a 17 CPI × 6 LPI.</field>
+        <field
+            name="note"
+        >Portado del reporte Visual FoxPro factur01.frx: encabezado 14 filas, títulos 1, detalle 35 renglones, pie 16 = 66 líneas en carta a 17 CPI × 6 LPI.</field>
     </record>
     <record id="band_page_header" model="l10n.ve.escp.report.band">
         <field name="report_id" ref="l10n_ve_escp_report_invoice" />
@@ -585,7 +587,9 @@
         <field name="height">1</field>
         <field name="align">right</field>
         <field name="style">bold</field>
-        <field name="expr">comp_currency.name if dual_currency else doc_currency.name</field>
+        <field
+            name="expr"
+        >comp_currency.name if dual_currency else doc_currency.name</field>
         <field name="format">text</field>
     </record>
     <record id="obj_page_footer_note_bcv" model="l10n.ve.escp.report.object">
@@ -598,7 +602,9 @@
         <field name="height">4</field>
         <field name="align">left</field>
         <field name="style">small</field>
-        <field name="text">El precio pactado de esta venta es en dolares americanos y se expresa en Bolivares a la tasa de cambio referencial publicada por el BCV a la fecha de esta facturacion; según disposición de los Artículos 25 de Ley I.V.A y 38 de su reglamento.</field>
+        <field
+            name="text"
+        >El precio pactado de esta venta es en dolares americanos y se expresa en Bolivares a la tasa de cambio referencial publicada por el BCV a la fecha de esta facturacion; según disposición de los Artículos 25 de Ley I.V.A y 38 de su reglamento.</field>
         <field name="wrap" eval="True" />
     </record>
     <record id="obj_page_footer_lbl_exempt" model="l10n.ve.escp.report.object">
@@ -687,7 +693,9 @@
         <field name="height">1</field>
         <field name="align">left</field>
         <field name="style">normal</field>
-        <field name="expr">('Descuento %s (-):' % discount_percent).replace('  ', ' ')</field>
+        <field
+            name="expr"
+        >('Descuento %s (-):' % discount_percent).replace('  ', ' ')</field>
         <field name="format">text</field>
     </record>
     <record id="obj_page_footer_discount_doc" model="l10n.ve.escp.report.object">
@@ -764,7 +772,9 @@
         <field name="height">3</field>
         <field name="align">left</field>
         <field name="style">small</field>
-        <field name="text">Si el pago se efectúa en Bs. debe aplicarse la tasa de cambio oficial vigente al día de pago, el cual queda sujeto a los ajustes previstos en el Articulo 51 del reglamento del I.V.A.</field>
+        <field
+            name="text"
+        >Si el pago se efectúa en Bs. debe aplicarse la tasa de cambio oficial vigente al día de pago, el cual queda sujeto a los ajustes previstos en el Articulo 51 del reglamento del I.V.A.</field>
         <field name="wrap" eval="True" />
     </record>
     <record id="obj_page_footer_lbl_vat_base" model="l10n.ve.escp.report.object">
@@ -1032,7 +1042,9 @@
         <field name="height">3</field>
         <field name="align">left</field>
         <field name="style">small</field>
-        <field name="expr">'Esta factura está sujeta a percepción del %s de IGTF según forma de pago, en base a lo dispuesto en la Providencia Administrativa (SNAT/2022/000013).' % igtf_percent</field>
+        <field
+            name="expr"
+        >'Esta factura está sujeta a percepción del %s de IGTF según forma de pago, en base a lo dispuesto en la Providencia Administrativa (SNAT/2022/000013).' % igtf_percent</field>
         <field name="format">text</field>
         <field name="wrap" eval="True" />
     </record>

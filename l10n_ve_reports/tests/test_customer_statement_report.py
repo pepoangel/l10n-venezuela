@@ -48,9 +48,7 @@ class TestCustomerStatementReport(TestAccountReportsCommon):
             line for line in lines if line.get("name") == self.partner_a.name
         )
         partner_total = next(
-            line
-            for line in lines
-            if line.get("name") == f"Total {self.partner_a.name}"
+            line for line in lines if line.get("name") == f"Total {self.partner_a.name}"
         )
         grand_total = next(
             line
@@ -69,9 +67,7 @@ class TestCustomerStatementReport(TestAccountReportsCommon):
     def test_partner_section_total_matches_grand_total_in_company_currency(self):
         lines, _options = self._get_customer_statement_lines()
         partner_total = next(
-            line
-            for line in lines
-            if line.get("name") == f"Total {self.partner_a.name}"
+            line for line in lines if line.get("name") == f"Total {self.partner_a.name}"
         )
         grand_total = next(
             line

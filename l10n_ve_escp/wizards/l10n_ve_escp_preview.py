@@ -58,7 +58,9 @@ class L10nVeEscpPreview(models.TransientModel):
             action = (
                 self.env["ir.actions.report"]
                 .sudo()
-                .search([("report_name", "=", ctx["default_report_action_name"])], limit=1)
+                .search(
+                    [("report_name", "=", ctx["default_report_action_name"])], limit=1
+                )
             )
             if action.l10n_ve_escp_report_id:
                 res["report_id"] = action.l10n_ve_escp_report_id.id

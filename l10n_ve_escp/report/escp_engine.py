@@ -86,6 +86,7 @@ def absolute_position(inches):
     units = max(0, min(32767, int(round(inches * 60.0))))
     return ESC + b"$" + bytes([units & 0xFF, units >> 8])
 
+
 ESCAPY_SIDE_MARGIN_PT = 3.0 / 25.4 * 72.0
 
 
@@ -208,7 +209,9 @@ class Grid:
             "style": style,
         }
 
-    def put_lines(self, row, col, lines, width=None, align="left", style=0, max_lines=1):
+    def put_lines(
+        self, row, col, lines, width=None, align="left", style=0, max_lines=1
+    ):
         for index, line in enumerate(lines[: max(1, max_lines)]):
             self.put(row + index, col, line, width, align, style)
 
@@ -294,7 +297,7 @@ class Grid:
         run_style = None
         run_chars = []
         for index, (char, style) in enumerate(
-            zip(self.chars[row_index], self.styles[row_index])
+            zip(self.chars[row_index], self.styles[row_index], strict=False)
         ):
             if style & STYLE_CONT:
                 continue
@@ -321,7 +324,9 @@ def _html_small_run(run, ratio):
         '<span style="font-size:%(scale).3fem">%(body)s</span></span>'
     ) % {
         "width": run["width"],
-        "align": run["align"] if run["align"] in ("left", "right", "center") else "left",
+        "align": run["align"]
+        if run["align"] in ("left", "right", "center")
+        else "left",
         "scale": 1.0 / ratio,
         "body": body,
     }
@@ -381,7 +386,9 @@ def pages_to_escp(pages, spec, final_form_feed=True):
     buf = bytearray()
     buf += ESC_INIT
     buf += ESC_BOLD_OFF + ESC_WIDE_OFF + ESC_UNDERLINE_OFF + ESC_DOUBLE_STRIKE_OFF
-    buf += PRINT_QUALITY_ESC_P.get(spec.get("quality"), PRINT_QUALITY_ESC_P["draft_double"])
+    buf += PRINT_QUALITY_ESC_P.get(
+        spec.get("quality"), PRINT_QUALITY_ESC_P["draft_double"]
+    )
     base_cpi = str(spec.get("cpi") or "17")
     buf += cpi_command(base_cpi)
     buf += LPI_ESC_P.get(str(spec.get("lpi")), LPI_ESC_P["6"])

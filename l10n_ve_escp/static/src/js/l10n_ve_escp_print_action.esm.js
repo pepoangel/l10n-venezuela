@@ -164,9 +164,12 @@ export class L10nVeEscpPrintAction extends Component {
         const testMode = Boolean(params.test_mode);
         try {
             if (!reportId || !resIds || !resIds.length) {
-                this.notification.add(_t("Faltan el reporte o los registros a imprimir."), {
-                    type: "danger",
-                });
+                this.notification.add(
+                    _t("Faltan el reporte o los registros a imprimir."),
+                    {
+                        type: "danger",
+                    }
+                );
                 return;
             }
             const {payload_b64: b64} = await this.orm.call(

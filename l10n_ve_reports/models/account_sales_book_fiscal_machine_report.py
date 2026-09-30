@@ -1208,7 +1208,8 @@ class SalesBookFiscalMachineReportCustomHandler(models.AbstractModel):
                 elif col_expr_label == "tax_base_general_aliquot":
                     line_columns.append(
                         report._build_column_dict(
-                            section_data["base_invoices"],
+                            section_data["base_invoices"]
+                            - section_data["base_credits"],
                             column,
                             options=options,
                         )
@@ -1216,7 +1217,8 @@ class SalesBookFiscalMachineReportCustomHandler(models.AbstractModel):
                 elif col_expr_label == "amount_general_aliquot":
                     line_columns.append(
                         report._build_column_dict(
-                            section_data["amount_invoices"],
+                            section_data["amount_invoices"]
+                            - section_data["amount_credits"],
                             column,
                             options=options,
                         )

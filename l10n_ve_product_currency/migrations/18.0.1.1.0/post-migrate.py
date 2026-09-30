@@ -24,9 +24,7 @@ def migrate(cr, version):
     icp = env["ir.config_parameter"].sudo()
     if icp.get_param("l10n_ve_product_currency.default_force_cost_currency_id"):
         return
-    sale_default = icp.get_param(
-        "l10n_ve_product_currency.default_force_currency_id"
-    )
+    sale_default = icp.get_param("l10n_ve_product_currency.default_force_currency_id")
     if sale_default:
         icp.set_param(
             "l10n_ve_product_currency.default_force_cost_currency_id",

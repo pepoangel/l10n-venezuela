@@ -211,9 +211,7 @@ class TestProductTemplateL10nVe(L10nVeSeniatCommon):
             self.purchase_tax,
         )
         self.assertEqual(
-            product.supplier_taxes_id.filtered(
-                lambda t: t.company_id == other_company
-            ),
+            product.supplier_taxes_id.filtered(lambda t: t.company_id == other_company),
             other_purchase,
         )
 

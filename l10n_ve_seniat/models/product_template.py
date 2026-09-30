@@ -115,14 +115,14 @@ class ProductTemplate(models.Model):
             if not hidden:
                 continue
             new_ids = self._l10n_ve_m2m_ids_from_commands(cmds)
-            vals[field_name] = [
-                Command.set(list(dict.fromkeys(new_ids + hidden.ids)))
-            ]
+            vals[field_name] = [Command.set(list(dict.fromkeys(new_ids + hidden.ids)))]
 
     @api.model
     def _l10n_ve_get_exent_sale_tax(self, company):
-        tax = self.env["account.tax.group"].sudo()._l10n_ve_get_exempt_tax(
-            company, "sale"
+        tax = (
+            self.env["account.tax.group"]
+            .sudo()
+            ._l10n_ve_get_exempt_tax(company, "sale")
         )
         if tax:
             return tax
@@ -141,8 +141,10 @@ class ProductTemplate(models.Model):
 
     @api.model
     def _l10n_ve_get_exent_purchase_tax(self, company):
-        tax = self.env["account.tax.group"].sudo()._l10n_ve_get_exempt_tax(
-            company, "purchase"
+        tax = (
+            self.env["account.tax.group"]
+            .sudo()
+            ._l10n_ve_get_exempt_tax(company, "purchase")
         )
         if tax:
             return tax

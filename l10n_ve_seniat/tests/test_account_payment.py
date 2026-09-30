@@ -392,7 +392,7 @@ class TestAccountPaymentRegisterSameDay(L10nVeSeniatCommon):
             self.invoice_date,
         )
         paid = converted
-        if self.ves.compare_amounts(converted, fiscal_ves) == 0:
+        if self.ves.compare_amounts(converted, fiscal_ves) >= 0:
             paid = self.ves.round(fiscal_ves - 5.58)
         self._pay_amount(invoice, self.invoice_date, self.ves, paid)
         leftover = self._payment_term_residual(invoice)

@@ -1383,6 +1383,31 @@ class AccountMove(models.Model):
             -igtf_amount_company_currency,
         )
 
+    def _l10n_ve_align_refund_tax_totals_to_accounting(self, tax_totals):
+        aligned = super()._l10n_ve_align_refund_tax_totals_to_accounting(tax_totals)
+        if (
+            aligned is tax_totals
+            or "l10n_ve_igtf_total_without_igtf_currency" not in tax_totals
+        ):
+            return aligned
+        igtf_delta_currency = tax_totals.get(
+            "total_amount_currency", 0.0
+        ) - tax_totals.get("l10n_ve_igtf_total_without_igtf_currency", 0.0)
+        igtf_delta_company = tax_totals.get("total_amount", 0.0) - tax_totals.get(
+            "l10n_ve_igtf_total_without_igtf", 0.0
+        )
+        aligned["l10n_ve_igtf_total_without_igtf_currency"] = aligned.get(
+            "total_amount_currency", 0.0
+        )
+        aligned["l10n_ve_igtf_total_without_igtf"] = aligned.get("total_amount", 0.0)
+        aligned["total_amount_currency"] = self.currency_id.round(
+            aligned.get("total_amount_currency", 0.0) + igtf_delta_currency
+        )
+        aligned["total_amount"] = self.company_currency_id.round(
+            aligned.get("total_amount", 0.0) + igtf_delta_company
+        )
+        return aligned
+
     def _l10n_ve_igtf_tax_totals_merge_igtf_row(self):
         """Devuelve tax_totals enriquecido o False si no aplica."""
         self.ensure_one()

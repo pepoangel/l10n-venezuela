@@ -817,7 +817,7 @@ class TestAccountBook(L10nVeSeniatCommon):
             }
         )
         doc.invalidate_recordset(["source_record"])
-        self.assertFalse(doc.source_record.exists())
+        self.assertFalse(doc.source_record)
 
     def test_selection_document_ref_includes_account_move(self):
         selection = self.env["account.book.document"]._selection_document_ref()

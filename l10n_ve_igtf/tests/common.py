@@ -24,6 +24,12 @@ class TestL10nVeIgtfCommon(L10nVeSeniatCommon):
         cls.company.currency_id = cls.ves
         cls.company.account_fiscal_country_id = cls.env.ref("base.ve")
 
+        ProductTemplate = cls.env["product.template"]
+        cls.exempt_sale_tax = ProductTemplate._l10n_ve_get_exent_sale_tax(cls.company)
+        cls.exempt_purchase_tax = ProductTemplate._l10n_ve_get_exent_purchase_tax(
+            cls.company
+        )
+
         cls.igtf_account = cls.company.l10n_ve_igtf_account_id
         if not cls.igtf_account:
             cls.igtf_account = (
@@ -111,7 +117,7 @@ class TestL10nVeIgtfCommon(L10nVeSeniatCommon):
                                 "quantity": 1.0,
                                 "price_unit": amount,
                                 "account_id": self.revenue_account.id,
-                                "tax_ids": [Command.clear()],
+                                "tax_ids": [Command.set(self.exempt_sale_tax.ids)],
                             }
                         )
                     ],

@@ -6,9 +6,9 @@ from odoo.tests import TransactionCase, tagged
 
 from odoo.addons.l10n_ve_escp.report.escp_engine import (
     CPI_ESC_P,
-    Grid,
     STYLE_BOLD,
     STYLE_SMALL,
+    Grid,
     escapy_available,
 )
 from odoo.addons.l10n_ve_escp.report.frx_parser import frx_layout
@@ -150,7 +150,9 @@ class TestL10nVeEscpReport(TransactionCase):
 
     def test_pl_reads_record_fields(self):
         detail = self.report.band_ids.filtered(lambda b: b.band_type == "detail")
-        detail.object_ids.filtered(lambda o: o.expr == "line.name").write({"expr": "pl.name"})
+        detail.object_ids.filtered(lambda o: o.expr == "line.name").write(
+            {"expr": "pl.name"}
+        )
         pages = self.report._render_pages(self.partner)
         first = pages[0].text_lines()
         self.assertIn("Contacto Dos", first[2])
@@ -159,7 +161,10 @@ class TestL10nVeEscpReport(TransactionCase):
     def test_field_helper_reads_dotted_paths(self):
         ctx = self.report._base_eval_context(self.partner)
         self.assertEqual(ctx["field"](self.partner, "name"), "Empresa Prueba")
-        self.assertEqual(ctx["field"](self.partner, "child_ids.name"), self.partner.child_ids.mapped("name"))
+        self.assertEqual(
+            ctx["field"](self.partner, "child_ids.name"),
+            self.partner.child_ids.mapped("name"),
+        )
 
     def test_render_pages_and_bands(self):
         pages = self.report._render_pages(self.partner)
@@ -214,7 +219,10 @@ class TestL10nVeEscpReport(TransactionCase):
         payload = self.env["l10n.ve.escp.report"].get_print_payload(
             self.report.id, "res.partner", json.dumps(self.partner.ids)
         )
-        self.assertEqual(base64.b64decode(payload["payload_b64"]), self.report._render_escp(self.partner))
+        self.assertEqual(
+            base64.b64decode(payload["payload_b64"]),
+            self.report._render_escp(self.partner),
+        )
         self.assertTrue(
             self.env["l10n.ve.escp.report"].confirm_printed(
                 self.report.id, "res.partner", self.partner.ids
@@ -237,12 +245,12 @@ class TestL10nVeEscpReport(TransactionCase):
         self.assertNotEqual(imported.id, self.report.id)
         self.assertEqual(len(imported.band_ids), len(self.report.band_ids))
         self.assertEqual(
-            imported.band_ids.filtered(lambda b: b.band_type == "page_header").object_ids.mapped(
-                "text"
-            ),
-            self.report.band_ids.filtered(lambda b: b.band_type == "page_header").object_ids.mapped(
-                "text"
-            ),
+            imported.band_ids.filtered(
+                lambda b: b.band_type == "page_header"
+            ).object_ids.mapped("text"),
+            self.report.band_ids.filtered(
+                lambda b: b.band_type == "page_header"
+            ).object_ids.mapped("text"),
         )
 
     def test_shift_layout_rows(self):
@@ -261,7 +269,10 @@ class TestL10nVeEscpReport(TransactionCase):
         data = self.report.designer_load()
         self.assertEqual(data["report"]["line_width"], 80)
         self.assertEqual(data["report"]["page_rows"], 12)
-        self.assertEqual([b["band_type"] for b in data["bands"]], ["page_header", "detail", "page_footer"])
+        self.assertEqual(
+            [b["band_type"] for b in data["bands"]],
+            ["page_header", "detail", "page_footer"],
+        )
         header = data["bands"][0]
         field = next(o for o in header["objects"] if o["kind"] == "field")
         self.assertEqual(data["sample_values"][field["id"]], "EMPRESA PRUEBA")
@@ -280,28 +291,61 @@ class TestL10nVeEscpReport(TransactionCase):
                         {**field, "id": 0, "row": 2, "col": 4, "expr": "o.vat"},
                     ],
                 },
-                {"id": detail["id"], "band_type": "detail", "height": 1, "detail_rows": 2,
-                 "detail_expr": detail["detail_expr"], "objects": detail["objects"]},
-                {"id": 0, "band_type": "summary", "height": 1, "objects": [
-                    {"kind": "label", "row": 0, "col": 0, "width": 10, "text": "Resumen", "style": "bold"}
-                ]},
+                {
+                    "id": detail["id"],
+                    "band_type": "detail",
+                    "height": 1,
+                    "detail_rows": 2,
+                    "detail_expr": detail["detail_expr"],
+                    "objects": detail["objects"],
+                },
+                {
+                    "id": 0,
+                    "band_type": "summary",
+                    "height": 1,
+                    "objects": [
+                        {
+                            "kind": "label",
+                            "row": 0,
+                            "col": 0,
+                            "width": 10,
+                            "text": "Resumen",
+                            "style": "bold",
+                        }
+                    ],
+                },
             ],
-            "deleted_object_ids": [o["id"] for o in header["objects"] if o["kind"] == "field"],
+            "deleted_object_ids": [
+                o["id"] for o in header["objects"] if o["kind"] == "field"
+            ],
             "deleted_band_ids": [data["bands"][2]["id"]],
             "margin_top_lines": 1,
         }
         result = self.report.designer_save(payload)
-        self.assertEqual([b["band_type"] for b in result["bands"]], ["page_header", "detail", "summary"])
+        self.assertEqual(
+            [b["band_type"] for b in result["bands"]],
+            ["page_header", "detail", "summary"],
+        )
         self.assertEqual(result["report"]["margin_top_lines"], 1)
         header = result["bands"][0]
         self.assertEqual(header["height"], 3)
-        self.assertEqual(sorted(o["kind"] for o in header["objects"]), ["field", "label"])
-        self.assertEqual(next(o for o in header["objects"] if o["kind"] == "label")["text"], "Cliente:")
-        self.assertEqual(next(o for o in header["objects"] if o["kind"] == "field")["expr"], "o.vat")
+        self.assertEqual(
+            sorted(o["kind"] for o in header["objects"]), ["field", "label"]
+        )
+        self.assertEqual(
+            next(o for o in header["objects"] if o["kind"] == "label")["text"],
+            "Cliente:",
+        )
+        self.assertEqual(
+            next(o for o in header["objects"] if o["kind"] == "field")["expr"], "o.vat"
+        )
         lines = self.report._render_pages(self.partner)[0].text_lines()
         self.assertEqual(lines[1 + 1][4:12], "Cliente:")
         self.assertIn("J123456789", lines[1 + 2])
-        self.assertIn("Resumen", "\n".join(self.report._render_pages(self.partner)[-1].text_lines()))
+        self.assertIn(
+            "Resumen",
+            "\n".join(self.report._render_pages(self.partner)[-1].text_lines()),
+        )
         action = self.report.action_open_designer()
         self.assertEqual(action["tag"], "l10n_ve_escp_designer")
         self.assertEqual(action["params"]["report_id"], self.report.id)
@@ -323,7 +367,9 @@ class TestL10nVeEscpReport(TransactionCase):
         ]
         width, bands = frx_layout(records)
         self.assertEqual(width, 85000.0)
-        self.assertEqual([b["type"] for b in bands], ["page_header", "detail", "page_footer"])
+        self.assertEqual(
+            [b["type"] for b in bands], ["page_header", "detail", "page_footer"]
+        )
         self.assertEqual(len(bands[0]["objects"]), 1)
         self.assertEqual(len(bands[1]["objects"]), 1)
         self.assertAlmostEqual(bands[1]["objects"][0]["rel_vpos"], 0.0, places=0)

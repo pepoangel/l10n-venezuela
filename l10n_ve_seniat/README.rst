@@ -45,6 +45,10 @@ seleccionado. El título muestra únicamente el nombre del documento y los
 totales omiten el IGTF cuando el diario no tiene medio de emisión. Los
 grupos de impuestos con una tasa de 0% no aparecen en los totales.
 
+Los impuestos del producto son los nativos de Odoo (``taxes_id`` y
+``supplier_taxes_id``), con exactamente uno de venta y uno de compra por
+compañía venezolana.
+
 La fecha de recepción de la factura es el inicio de los plazos de pago y
 de las cuotas de vencimiento.
 
@@ -98,7 +102,9 @@ Notas de crédito y débito
 2. Use **Nota de crédito** (reversión) o **Nota de Debito** según
    corresponda.
 3. En **ventas**, aplican las reglas SENIAT de emisión, montos y
-   productos.
+   productos. En una nota de débito de cliente en borrador puede cambiar
+   el precio unitario y la moneda. La nota de crédito de cliente
+   conserva la moneda de la factura origen.
 4. En **proveedor**, el registro es más libre: puede cambiar moneda,
    impuestos y montos distintos a la factura origen (sin tope SENIAT de
    NC ni forzar bolívares).
@@ -106,6 +112,17 @@ Notas de crédito y débito
    revertir, use el asistente **Nota de crédito por ND**.
 
 Las notas reutilizan el mismo diario y contacto de la factura origen.
+
+Impuestos del producto
+----------------------
+
+En la ficha del producto se usan los campos nativos de Odoo **Sales
+Taxes** (``taxes_id``) y **Purchase Taxes** (``supplier_taxes_id``). Al
+guardar, cada compañía venezolana activa debe quedar con exactamente un
+impuesto de venta y uno de compra. Si falta alguno, se completa con el
+impuesto por defecto de esa compañía o con el exento. En productos
+compartidos no se sustituyen los impuestos de las compañías que no están
+activas.
 
 Impuesto en líneas de factura
 -----------------------------

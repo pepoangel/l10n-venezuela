@@ -1,6 +1,6 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import fields
+from odoo import Command, fields
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 from odoo.tools import float_compare
@@ -75,6 +75,7 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
         products=None,
         payment_term=None,
         quantities=None,
+        post=True,
     ):
         tax = tax if tax is not None else self._sale_tax()
         discounts = discounts or [0.0] * len(prices)
@@ -106,6 +107,8 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
         if payment_term:
             vals["invoice_payment_term_id"] = payment_term.id
         invoice = self.env["account.move"].create(vals)
+        if not post:
+            return invoice
         invoice.action_post()
         invoice.l10n_ve_invoice_original_printed = True
         self.assertTrue(
@@ -363,7 +366,6 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
             places=2,
         )
 
-
     def test_full_reversal_usd_line_discount_keeps_origin_tax(self):
         date_invoice = fields.Date.to_date("2026-07-10")
         self._ensure_usd_rate(date_invoice, inverse_company_rate=100.0)
@@ -551,8 +553,7 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
         credit._l10n_ve_force_refund_to_company_currency()
         self.assertEqual(credit.currency_id, invoice.currency_id)
         warning = credit.message_ids.filtered(
-            lambda message: message.body
-            and "emparejar" in message.body.lower()
+            lambda message: message.body and "emparejar" in message.body.lower()
         )
         self.assertTrue(warning)
 
@@ -834,9 +835,7 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
             and line.product_id == origin_first.product_id
         )
         self.assertEqual(
-            company_cur.round(
-                abs(first_line.balance) + abs(second_products.balance)
-            ),
+            company_cur.round(abs(first_line.balance) + abs(second_products.balance)),
             company_cur.round(abs(origin_first.balance)),
         )
 
@@ -1115,9 +1114,7 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
         origin_line.ensure_one()
         origin_bs = abs(origin_line.balance)
         company_cur = invoice.company_currency_id
-        origin_pu_bs = invoice._l10n_ve_company_price_unit_from_origin_line(
-            origin_line
-        )
+        origin_pu_bs = invoice._l10n_ve_company_price_unit_from_origin_line(origin_line)
         credit = self.env["account.move"].create(
             {
                 "move_type": "out_refund",
@@ -1163,8 +1160,7 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
         product_line.write({"quantity": product_line.quantity * 2.0})
         credit._l10n_ve_cap_refund_company_amount_to_remaining()
         warning = credit.message_ids.filtered(
-            lambda message: message.body
-            and "saldo restante" in message.body.lower()
+            lambda message: message.body and "saldo restante" in message.body.lower()
         )
         self.assertTrue(warning)
         origin_bs = abs(
@@ -1313,7 +1309,16 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
             self.skipTest("l10n_ve_loyalty no instalado")
         date_invoice = fields.Date.to_date("2026-08-25")
         self._ensure_usd_rate(date_invoice, inverse_company_rate=785.0685)
-        invoice = self._create_usd_invoice(date_invoice, (1000.0,))
+        invoice = self._create_usd_invoice(date_invoice, (1000.0,), post=False)
+        self.env.user.write(
+            {
+                "groups_id": [
+                    Command.link(
+                        self.env.ref("l10n_ve_loyalty.group_l10n_ve_global_discount").id
+                    )
+                ]
+            }
+        )
         reason = self.env["l10n.ve.discount.reason"].search([], limit=1)
         if not reason:
             reason = self.env["l10n.ve.discount.reason"].create(
@@ -1327,6 +1332,8 @@ class TestAccountMoveRefundCurrency(L10nVeSeniatCommon):
                 "discount_type": "fixed",
             }
         )
+        invoice.action_post()
+        invoice.l10n_ve_invoice_original_printed = True
         credit = self._reverse_invoice(invoice, reason="NC con descuento global")
         self.assertEqual(credit.currency_id, invoice.currency_id)
         self._assert_refund_tax_totals_match_move(credit, invoice)

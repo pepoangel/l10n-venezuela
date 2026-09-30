@@ -156,7 +156,9 @@
                         invisible="active"
                     />
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="Factura forma libre" /></h1>
+                        <h1>
+                            <field name="name" placeholder="Factura forma libre" />
+                        </h1>
                     </div>
                     <group>
                         <group string="Documento">
@@ -217,12 +219,18 @@
                                             <field name="expr" />
                                             <field name="format" />
                                             <field name="digits" optional="hide" />
-                                            <field name="currency_expr" optional="hide" />
+                                            <field
+                                                name="currency_expr"
+                                                optional="hide"
+                                            />
                                             <field name="wrap" optional="hide" />
                                             <field name="print_when" optional="hide" />
                                             <field name="fill_char" optional="hide" />
                                             <field name="foxpro_expr" optional="hide" />
-                                            <field name="active" widget="boolean_toggle" />
+                                            <field
+                                                name="active"
+                                                widget="boolean_toggle"
+                                            />
                                         </list>
                                     </field>
                                 </form>

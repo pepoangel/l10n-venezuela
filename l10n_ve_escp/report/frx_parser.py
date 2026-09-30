@@ -84,7 +84,9 @@ def parse_frx(frx_bytes, frt_bytes=None):
             elif ftype == "L":
                 out[name] = raw in (b"T", b"t", b"Y", b"y")
             elif ftype == "M":
-                idx = struct.unpack("<I", raw)[0] if flen == 4 else int(raw.strip() or 0)
+                idx = (
+                    struct.unpack("<I", raw)[0] if flen == 4 else int(raw.strip() or 0)
+                )
                 out[name] = read_memo(idx)
             elif ftype == "I":
                 out[name] = struct.unpack("<i", raw)[0]
@@ -126,7 +128,9 @@ def frx_layout(records):
         target = None
         for band in bands:
             lower = band["top_fru"] - SNAP_TOLERANCE_FRU
-            upper = band["top_fru"] + band["height_fru"] + BAND_BAR_FRU - SNAP_TOLERANCE_FRU
+            upper = (
+                band["top_fru"] + band["height_fru"] + BAND_BAR_FRU - SNAP_TOLERANCE_FRU
+            )
             if lower <= vpos < upper:
                 target = band
                 break

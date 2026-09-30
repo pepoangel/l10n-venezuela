@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import re
+from functools import partial
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -65,6 +66,39 @@ STYLE_SELECTION = [
     ("small_underline", "Pequeña subrayada"),
     ("small_bold_underline", "Pequeña negrita subrayada"),
 ]
+
+
+def _eval_datetime(env, record, value, pattern=None, tz=True):
+    if not value:
+        return ""
+    value = fields.Datetime.to_datetime(value)
+    if tz:
+        value = fields.Datetime.context_timestamp(record, value)
+    if pattern:
+        return value.strftime(pattern)
+    return format_datetime(env, value)
+
+
+def _eval_field(target, path, default=""):
+    if not target or not path:
+        return default
+    parts = str(path).split(".")
+    value = target
+    for index, part in enumerate(parts):
+        if value is None or value is False:
+            return default
+        if isinstance(value, models.BaseModel):
+            if part not in value._fields:
+                return default
+            if index == len(parts) - 1 and len(value) != 1:
+                value = value.mapped(part)
+            else:
+                value = value[part]
+        else:
+            value = getattr(value, part, default)
+    if value is None or value is False:
+        return default
+    return value
 
 
 class _Namespace(dict):
@@ -142,9 +176,7 @@ class L10nVeEscpReport(models.Model):
         store=True,
         readonly=False,
     )
-    page_rows = fields.Integer(
-        string="Líneas por página", compute="_compute_page_rows"
-    )
+    page_rows = fields.Integer(string="Líneas por página", compute="_compute_page_rows")
     margin_top_lines = fields.Integer(
         string="Margen superior (líneas)",
         default=0,
@@ -263,9 +295,8 @@ class L10nVeEscpReport(models.Model):
                 pages = report._render_pages(record.exists())
             except Exception as err:
                 _logger.debug("ESC/P preview failed", exc_info=True)
-                report.preview_html = "<pre>%s</pre>" % _(
-                    "No se pudo generar la vista previa: %s", err
-                )
+                error_message = _("No se pudo generar la vista previa: %s", err)
+                report.preview_html = f"<pre>{error_message}</pre>"
                 report.preview_pdf = False
                 continue
             report.preview_html = pages_to_html(pages)
@@ -277,9 +308,18 @@ class L10nVeEscpReport(models.Model):
         for report in self:
             details = report.band_ids.filtered(lambda b: b.band_type == "detail")
             if len(details) > 1:
-                raise ValidationError(_("Un reporte solo puede tener una banda de detalle."))
-            for band_type in ("title", "page_header", "column_header", "summary", "page_footer"):
-                if len(report.band_ids.filtered(lambda b: b.band_type == band_type)) > 1:
+                raise ValidationError(
+                    _("Un reporte solo puede tener una banda de detalle.")
+                )
+            for band_type in (
+                "title",
+                "page_header",
+                "column_header",
+                "summary",
+                "page_footer",
+            ):
+                bands = report.band_ids.filtered_domain([("band_type", "=", band_type)])
+                if len(bands) > 1:
                     raise ValidationError(
                         _("Solo puede haber una banda de tipo %s.", band_type)
                     )
@@ -292,7 +332,9 @@ class L10nVeEscpReport(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if {"name", "model_id", "active", "show_in_print_menu", "company_id"} & set(vals):
+        if {"name", "model_id", "active", "show_in_print_menu", "company_id"} & set(
+            vals
+        ):
             self._sync_report_action()
         return res
 
@@ -338,7 +380,9 @@ class L10nVeEscpReport(models.Model):
 
         def money(amount, currency=None, digits=None):
             if currency is None or not currency:
-                return formatLang(env, amount or 0.0, digits=digits if digits is not None else 2)
+                return formatLang(
+                    env, amount or 0.0, digits=digits if digits is not None else 2
+                )
             return formatLang(env, amount or 0.0, currency_obj=currency)
 
         def num(amount, digits=2):
@@ -357,45 +401,16 @@ class L10nVeEscpReport(models.Model):
                 return fields.Date.to_date(value).strftime(pattern)
             return format_date(env, value)
 
-        def datetime_(value, pattern=None, tz=True):
-            if not value:
-                return ""
-            value = fields.Datetime.to_datetime(value)
-            if tz:
-                value = fields.Datetime.context_timestamp(record, value)
-            if pattern:
-                return value.strftime(pattern)
-            return format_datetime(env, value)
-
         def words(amount, currency=None, lang=None):
             currency = currency or getattr(record, "currency_id", False)
             if not currency:
                 return ""
-            return currency.with_context(lang=lang or env.user.lang).amount_to_text(amount or 0.0)
+            return currency.with_context(lang=lang or env.user.lang).amount_to_text(
+                amount or 0.0
+            )
 
         def wrap_(text, width):
             return wrap(text, width)
-
-        def field(target, path, default=""):
-            if not target or not path:
-                return default
-            parts = str(path).split(".")
-            value = target
-            for index, part in enumerate(parts):
-                if value is None or value is False:
-                    return default
-                if isinstance(value, models.BaseModel):
-                    if part not in value._fields:
-                        return default
-                    if index == len(parts) - 1 and len(value) != 1:
-                        value = value.mapped(part)
-                    else:
-                        value = value[part]
-                else:
-                    value = getattr(value, part, default)
-            if value is None or value is False:
-                return default
-            return value
 
         ctx = _Namespace(
             o=record,
@@ -411,10 +426,10 @@ class L10nVeEscpReport(models.Model):
             num=num,
             qty=qty,
             date=date,
-            datetime_fmt=datetime_,
+            datetime_fmt=partial(_eval_datetime, env, record),
             words=words,
             wrap=wrap_,
-            field=field,
+            field=_eval_field,
             upper=lambda value: (value or "").upper(),
             lower=lambda value: (value or "").lower(),
             strip=lambda value: (value or "").strip(),
@@ -437,7 +452,7 @@ class L10nVeEscpReport(models.Model):
             if isinstance(hook_data, dict):
                 pl_value = hook_data.pop("pl", None)
                 if pl_value is not None:
-                    if isinstance(pl_value, (_Namespace, dict)):
+                    if isinstance(pl_value, _Namespace | dict):
                         pl_extras = dict(pl_value)
                     else:
                         pl_extras = {"value": pl_value}
@@ -480,7 +495,9 @@ class L10nVeEscpReport(models.Model):
         detail = self._band("detail")
         params = {
             "margin_top_lines": self.margin_top_lines,
-            "detail_rows": detail.detail_rows if detail and detail.detail_rows else None,
+            "detail_rows": detail.detail_rows
+            if detail and detail.detail_rows
+            else None,
         }
         if record and hasattr(record, "_l10n_ve_escp_layout_params"):
             override = record._l10n_ve_escp_layout_params(self) or {}
@@ -538,8 +555,12 @@ class L10nVeEscpReport(models.Model):
             row = margin_top_lines
             if page_index == 0:
                 row = self._place_band(grid, self._band("title"), row, base_ctx, record)
-            row = self._place_band(grid, self._band("page_header"), row, base_ctx, record)
-            row = self._place_band(grid, self._band("column_header"), row, base_ctx, record)
+            row = self._place_band(
+                grid, self._band("page_header"), row, base_ctx, record
+            )
+            row = self._place_band(
+                grid, self._band("column_header"), row, base_ctx, record
+            )
             if detail_band:
                 for index, line in enumerate(page_lines):
                     line_ctx = self._line_eval_context(
@@ -551,7 +572,9 @@ class L10nVeEscpReport(models.Model):
             else:
                 row += per_page * detail_height
             if page_index == page_count - 1:
-                row = self._place_band(grid, self._band("summary"), row, base_ctx, record)
+                row = self._place_band(
+                    grid, self._band("summary"), row, base_ctx, record
+                )
             else:
                 row += self._band_height("summary")
             self._place_band(grid, self._band("page_footer"), row, base_ctx, record)
@@ -705,7 +728,10 @@ class L10nVeEscpReport(models.Model):
             raise UserError(_("El archivo de diseño no es válido."))
         if data.get("format_version") != LAYOUT_VERSION:
             raise UserError(
-                _("Versión de diseño no compatible (esperada %(expected)s, recibida %(got)s).")
+                _(
+                    "Versión de diseño no compatible "
+                    "(esperada %(expected)s, recibida %(got)s)."
+                )
                 % {
                     "expected": LAYOUT_VERSION,
                     "got": data.get("format_version"),
@@ -715,9 +741,14 @@ class L10nVeEscpReport(models.Model):
         model_name = report_data.get("model")
         if not model_name:
             raise UserError(_("El diseño no indica el modelo Odoo."))
-        model = self.env["ir.model"].sudo().search([("model", "=", model_name)], limit=1)
+        model = (
+            self.env["ir.model"].sudo().search([("model", "=", model_name)], limit=1)
+        )
         if not model:
-            raise UserError(_("Modelo %(model)s no encontrado en esta base de datos.") % {"model": model_name})
+            raise UserError(
+                _("Modelo %(model)s no encontrado en esta base de datos.")
+                % {"model": model_name}
+            )
 
         Report = self.env["l10n.ve.escp.report"]
         Band = self.env["l10n.ve.escp.report.band"]
@@ -727,9 +758,7 @@ class L10nVeEscpReport(models.Model):
             report = target_report
             if report.model != model_name:
                 raise UserError(
-                    _(
-                        "El diseño es para %(src)s pero el reporte destino usa %(dst)s."
-                    )
+                    _("El diseño es para %(src)s pero el reporte destino usa %(dst)s.")
                     % {"src": model_name, "dst": report.model}
                 )
             report.band_ids.unlink()
@@ -850,12 +879,16 @@ class L10nVeEscpReport(models.Model):
                 try:
                     values[obj.id] = str(obj._value(ctx))
                 except Exception as err:
-                    values[obj.id] = "#ERR %s" % err
+                    values[obj.id] = f"#ERR {err}"
         return values
 
     def designer_load(self):
         self.ensure_one()
-        sample = self.sample_ref if self.sample_ref and self.sample_ref._name == self.model else None
+        sample = (
+            self.sample_ref
+            if self.sample_ref and self.sample_ref._name == self.model
+            else None
+        )
         fixed, detail_rows, detail_height, margin_top = self._layout_rows(sample)
         bands = []
         for band in self.band_ids.sorted(lambda b: (b.sequence, b.id)):
@@ -867,7 +900,10 @@ class L10nVeEscpReport(models.Model):
                     "id": band.id,
                     **{name: band[name] for name in self.BAND_DESIGNER_FIELDS},
                     "objects": [
-                        {"id": obj.id, **{name: obj[name] for name in self.OBJECT_DESIGNER_FIELDS}}
+                        {
+                            "id": obj.id,
+                            **{name: obj[name] for name in self.OBJECT_DESIGNER_FIELDS},
+                        }
                         for obj in objects
                     ],
                 }
@@ -889,9 +925,15 @@ class L10nVeEscpReport(models.Model):
             "options": {
                 "band_types": BAND_TYPES,
                 "styles": STYLE_SELECTION,
-                "kinds": self.env["l10n.ve.escp.report.object"]._fields["kind"].selection,
-                "formats": self.env["l10n.ve.escp.report.object"]._fields["format"].selection,
-                "aligns": self.env["l10n.ve.escp.report.object"]._fields["align"].selection,
+                "kinds": self.env["l10n.ve.escp.report.object"]
+                ._fields["kind"]
+                .selection,
+                "formats": self.env["l10n.ve.escp.report.object"]
+                ._fields["format"]
+                .selection,
+                "aligns": self.env["l10n.ve.escp.report.object"]
+                ._fields["align"]
+                .selection,
             },
         }
 
@@ -900,10 +942,14 @@ class L10nVeEscpReport(models.Model):
         self.check_access("write")
         Band = self.env["l10n.ve.escp.report.band"]
         Obj = self.env["l10n.ve.escp.report.object"].with_context(active_test=False)
-        deleted_objects = [int(i) for i in payload.get("deleted_object_ids", []) if int(i) > 0]
+        deleted_objects = [
+            int(i) for i in payload.get("deleted_object_ids", []) if int(i) > 0
+        ]
         if deleted_objects:
             Obj.browse(deleted_objects).filtered(lambda o: o.report_id == self).unlink()
-        deleted_bands = [int(i) for i in payload.get("deleted_band_ids", []) if int(i) > 0]
+        deleted_bands = [
+            int(i) for i in payload.get("deleted_band_ids", []) if int(i) > 0
+        ]
         if deleted_bands:
             Band.browse(deleted_bands).filtered(lambda b: b.report_id == self).unlink()
         for band_data in payload.get("bands", []):
@@ -1000,7 +1046,8 @@ class L10nVeEscpReportBand(models.Model):
     def _compute_name(self):
         labels = dict(BAND_TYPES)
         for band in self:
-            band.name = "%s (%s)" % (labels.get(band.band_type, band.band_type), band.height)
+            band_label = labels.get(band.band_type, band.band_type)
+            band.name = f"{band_label} ({band.height})"
 
 
 class L10nVeEscpReportObject(models.Model):
@@ -1108,7 +1155,7 @@ class L10nVeEscpReportObject(models.Model):
             return ctx["datetime_fmt"](value)
         if isinstance(value, models.BaseModel):
             return ", ".join(value.mapped("display_name"))
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, list | tuple):
             return " ".join(str(v) for v in value)
         return str(value)
 

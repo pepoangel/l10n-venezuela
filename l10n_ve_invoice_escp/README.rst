@@ -29,11 +29,17 @@ Venezuela — Factura ESC/P Epson (WebUSB)
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
 Print Venezuelan customer invoices and credit or debit notes on
-continuous paper using Epson ESC/P printers over WebUSB.
+continuous pre-printed forms using Epson ESC/P printers over WebUSB.
 
-The module builds an ESC/P payload from the posted document and sends it
-from the browser to a compatible Epson USB printer. It applies only when
-the journal uses free-form emission and continuous paper.
+The module builds on ``l10n_ve_escp`` (band-based ESC/P report engine)
+and ships the invoice report ported from the legacy Visual FoxPro
+``factur01.frx``: customer block, column titles, detail lines,
+dual-currency totals, IGTF, exchange rate, legal notes, amount in words
+and copy/annulled stamp. It exposes the invoice business values
+(``partner_name``, ``tot.doc.vat``, ``pl.desc``...) to report
+expressions and hooks the SENIAT free-form flow: the *Print* button
+opens the ESC/P preview when the journal uses continuous paper, and the
+first print marks the original as printed.
 
 **Table of contents**
 
@@ -53,23 +59,77 @@ matrix printer from Chrome or Edge over HTTPS.
 Installation
 ============
 
-WebUSB printing requires Google Chrome or Microsoft Edge and an HTTPS
-(or localhost) backend. Grant USB access to the Epson printer when the
-browser asks for it.
+Requires ``l10n_ve_escp`` and its Python dependency ``pyscape`` (EscaPy)
+for the PDF preview. See that module's installation notes.
+
+Upgrading from 18.0.2.x: the former per-journal layouts
+(``l10n.ve.invoice.escp.layout``) are replaced by ESC/P reports.
+Journals on continuous paper are pointed to the shipped invoice report;
+recreate any custom positions as a duplicated report.
+
+Configuration
+=============
+
+1. Configure the sales journal with **Free form** emission and
+   **Continuous** print medium (module ``l10n_ve_seniat``).
+2. Optionally pick a **Reporte ESC/P** on the journal. Empty uses the
+   report shipped with the module, **Factura forma libre carta (FoxPro
+   factur01, 17 CPI)**.
+3. On the **talonario** linked to the journal (Accounting >
+   Configuration > Talonarios), set **Máximo de líneas por factura** and
+   **Líneas de margen (factura ESC/P)**. At print time those values
+   override the report defaults: the margin becomes blank lines before
+   the header and the maximum becomes the number of product rows per
+   page on continuous paper.
+4. To adapt field positions, go to **Accounting > Configuration >
+   Reportes ESC/P**, duplicate the shipped report and edit its bands and
+   objects (row, column, width, style, text or expression). Use a posted
+   invoice as **sample record** to preview the exact printer output
+   including talonario margin and line limits.
+
+Expressions available on ``account.move`` reports, besides the engine
+helpers:
+
+- Header: ``doc_title``, ``doc_label``, ``invoice_number``,
+  ``emission``, ``partner_name``, ``partner_vat``, ``partner_email``,
+  ``partner_phone``, ``partner_address``, ``client_code``, ``seller``,
+  ``payment_term``, ``origin_document``.
+- Detail: any ``account.move.line`` field via ``line.<field>`` or
+  ``pl.<field>`` (for example ``line.price_subtotal_currency``,
+  ``line.product_id.default_code``). Shortcuts with formatting:
+  ``pl.code``, ``pl.desc``, ``pl.ref``, ``pl.brand``, ``pl.qty``,
+  ``pl.price_unit``, ``pl.subtotal``,
+  ``pl.price_unit_company_currency``, ``pl.price_subtotal_currency``,
+  ``pl.subtotal_company_currency``.
+- Totals: ``tot.doc.<key>`` / ``tot.comp.<key>`` formatted in document
+  and company currency (``exempt``, ``gross``, ``discount``,
+  ``subtotal``, ``vat_base``, ``vat``, ``invoice``, ``igtf_base``,
+  ``igtf``, ``payable``), raw amounts in ``tot.doc_amount`` /
+  ``tot.comp_amount``, plus ``vat_percent``, ``igtf_percent``,
+  ``discount_percent``, ``dual_currency``, ``doc_currency``,
+  ``comp_currency``.
+- Footer: ``count_articles``, ``count_qty``, ``exchange_rate``,
+  ``amount_words``, ``stamp``.
+
+The module also registers a FoxPro expression map so **Import FoxPro
+report** converts the original ``factur01.frx`` fields (``nombrecli``,
+``totalfinal``...) to these names automatically.
 
 Usage
 =====
 
-To print a document:
+1. Post a customer invoice, credit note or debit note on a
+   continuous-paper journal.
+2. Click **Print**. The ESC/P preview dialog renders the exact byte
+   stream as PDF (bold labels, double-width title, condensed pitch, 66
+   lines per letter form).
+3. Click **Imprimir** and select the Epson USB printer in the browser
+   dialog.
 
-1. Configure a sales journal with **Free form** emission and
-   **Continuous** print medium.
-2. Post a customer invoice, credit note, or debit note on that journal.
-3. Use the continuous-paper print action on the document.
-4. Select the Epson ESC/P USB printer in the browser dialog.
-
-The first successful print marks the original as printed. Later prints
-include a copy legend. Cancelled documents print with an annulled stamp.
+The first successful print marks the original as printed; later prints
+carry the copy legend and cancelled documents print the annulled stamp.
+The report is also available under **Print > Factura forma libre carta**
+on the invoice list and form.
 
 Bug Tracker
 ===========

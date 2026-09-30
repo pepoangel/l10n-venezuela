@@ -1,4 +1,3 @@
-import base64
 import json
 
 from odoo import fields, models
@@ -30,6 +29,6 @@ class L10nVeEscpLayoutExport(models.TransientModel):
         )
         return {
             "type": "ir.actions.act_url",
-            "url": "/web/content/%s?download=true" % attachment.id,
+            "url": f"/web/content/{attachment.id}?download=true",
             "target": "self",
         }

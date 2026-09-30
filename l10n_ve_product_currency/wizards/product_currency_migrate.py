@@ -42,13 +42,15 @@ class L10nVeProductCurrencyMigrateWizard(models.TransientModel):
             if not self.sale_from_currency_id or not self.sale_to_currency_id:
                 raise UserError(
                     _(
-                        "Select the current and destination currencies for the sales price."
+                        "Select the current and destination currencies "
+                        "for the sales price."
                     )
                 )
             if self.sale_from_currency_id == self.sale_to_currency_id:
                 raise UserError(
                     _(
-                        "The destination sales price currency must be different from the current one."
+                        "The destination sales price currency must be different "
+                        "from the current one."
                     )
                 )
         if self.migrate_cost:
@@ -59,15 +61,16 @@ class L10nVeProductCurrencyMigrateWizard(models.TransientModel):
             if self.cost_from_currency_id == self.cost_to_currency_id:
                 raise UserError(
                     _(
-                        "The destination cost currency must be different from the current one."
+                        "The destination cost currency must be different "
+                        "from the current one."
                     )
                 )
 
     def action_migrate(self):
         self.ensure_one()
         self._check_migrate_currencies()
-        templates = self.env["product.template"].with_context(active_test=False).search(
-            []
+        templates = (
+            self.env["product.template"].with_context(active_test=False).search([])
         )
         sale_updated = self.env["product.template"]
         cost_updated = self.env["product.template"]

@@ -411,7 +411,7 @@ class TestCoverageExtraAccountMove(L10nVeSeniatCommon):
         wiz.reverse_moves()
         credit = wiz.new_move_ids
         credit.ensure_one()
-        self.assertEqual(credit.currency_id, credit.company_currency_id)
+        self.assertEqual(credit.currency_id, invoice.currency_id)
         company_cur = invoice.company_currency_id
         self.assertLessEqual(
             company_cur.round(credit._l10n_ve_to_company_abs_amount()),

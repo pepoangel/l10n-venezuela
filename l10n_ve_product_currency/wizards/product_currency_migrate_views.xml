@@ -16,7 +16,7 @@
                 </div>
                 <group>
                     <group string="Sales Price">
-                        <field name="migrate_sale"/>
+                        <field name="migrate_sale" />
                         <field
                             name="sale_from_currency_id"
                             invisible="not migrate_sale"
@@ -31,7 +31,7 @@
                         />
                     </group>
                     <group string="Cost">
-                        <field name="migrate_cost"/>
+                        <field name="migrate_cost" />
                         <field
                             name="cost_from_currency_id"
                             invisible="not migrate_cost"
@@ -53,7 +53,7 @@
                         string="Migrate"
                         class="btn-primary"
                     />
-                    <button string="Cancel" special="cancel"/>
+                    <button string="Cancel" special="cancel" />
                 </footer>
             </form>
         </field>

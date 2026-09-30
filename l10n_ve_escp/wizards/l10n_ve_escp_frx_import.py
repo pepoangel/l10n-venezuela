@@ -1,6 +1,6 @@
 import base64
 
-from odoo import _, api, fields, models
+from odoo import _, fields, models
 from odoo.exceptions import UserError
 
 from ..models.l10n_ve_escp_report import CPI_SELECTION, LPI_SELECTION
@@ -60,14 +60,22 @@ class L10nVeEscpFrxImport(models.TransientModel):
         objtype = int(item.get("OBJTYPE", 0))
         row = int(round(item["rel_vpos"] * lpi / 10000.0))
         col = int(round(float(item.get("HPOS") or 0.0) * cpi_chars / 10000.0))
-        width = max(1, int(round(float(item.get("WIDTH") or 0.0) * cpi_chars / 10000.0)))
+        width = max(
+            1, int(round(float(item.get("WIDTH") or 0.0) * cpi_chars / 10000.0))
+        )
         height = max(1, int(round(float(item.get("HEIGHT") or 0.0) * lpi / 10000.0)))
         font_style = int(item.get("FONTSTYLE") or 0)
         font_size = float(item.get("FONTSIZE") or 0.0)
         bold = bool(font_style & FONT_BOLD)
         wide = font_size >= WIDE_FONT_SIZE
         style = (
-            "bold_wide" if bold and wide else "wide" if wide else "bold" if bold else "normal"
+            "bold_wide"
+            if bold and wide
+            else "wide"
+            if wide
+            else "bold"
+            if bold
+            else "normal"
         )
         picture = item.get("PICTURE") or ""
         numeric = "9" in picture

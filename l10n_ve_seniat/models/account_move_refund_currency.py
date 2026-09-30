@@ -327,7 +327,6 @@ class AccountMove(models.Model):
             )
         return None
 
-
     def _l10n_ve_lock_refund_invoice_currency_rate_from_origin(self):
         for move in self:
             origin = move.reversed_entry_id
@@ -347,9 +346,7 @@ class AccountMove(models.Model):
             ):
                 continue
             # Keep the origin rate even if invoice_date triggers a recompute.
-            with move.env.protecting(
-                [move._fields["invoice_currency_rate"]], move
-            ):
+            with move.env.protecting([move._fields["invoice_currency_rate"]], move):
                 move.with_context(
                     check_move_validity=False,
                     l10n_ve_skip_refund_rate_lock=True,
@@ -466,17 +463,14 @@ class AccountMove(models.Model):
                 -sum(non_term_lines.mapped("amount_currency"))
             )
         current_currency = document_cur.round(sum(term_lines.mapped("amount_currency")))
-        if (
-            not float_compare(
-                current_balance,
-                residual_balance,
-                precision_rounding=company_cur.rounding,
-            )
-            and not float_compare(
-                current_currency,
-                residual_currency,
-                precision_rounding=document_cur.rounding,
-            )
+        if not float_compare(
+            current_balance,
+            residual_balance,
+            precision_rounding=company_cur.rounding,
+        ) and not float_compare(
+            current_currency,
+            residual_currency,
+            precision_rounding=document_cur.rounding,
         ):
             return
         weights = [abs(line.balance) for line in term_lines]
@@ -497,9 +491,7 @@ class AccountMove(models.Model):
             else:
                 weight_ratio = weights[index] / weight_sum
                 balance = company_cur.round(residual_balance * weight_ratio)
-                amount_currency = document_cur.round(
-                    residual_currency * weight_ratio
-                )
+                amount_currency = document_cur.round(residual_currency * weight_ratio)
                 allocated_balance += balance
                 allocated_currency += amount_currency
             vals = {}
@@ -694,9 +686,7 @@ class AccountMove(models.Model):
             [line.id for line in cred_products if line.id in refreshed_ids]
         )
 
-    def _l10n_ve_align_refund_is_full_origin_mirror(
-        self, orig_products, cred_products
-    ):
+    def _l10n_ve_align_refund_is_full_origin_mirror(self, orig_products, cred_products):
         if len(orig_products) != len(cred_products):
             return False
         origin_products = self.reversed_entry_id.invoice_line_ids.filtered(
@@ -770,15 +760,15 @@ class AccountMove(models.Model):
                     else 1.0
                 )
                 target_currency = self.currency_id.round(
-                    abs(origin_line.amount_currency)
-                    * abs(qty_ratio)
-                    * abs(price_ratio)
+                    abs(origin_line.amount_currency) * abs(qty_ratio) * abs(price_ratio)
                 )
                 posted_currency = 0.0
                 match_key = self.reversed_entry_id._l10n_ve_credit_note_line_match_key(
                     origin_line
                 )
-                for credit in self.reversed_entry_id._l10n_ve_posted_credit_notes_for_remaining():
+                for credit in (
+                    self.reversed_entry_id._l10n_ve_posted_credit_notes_for_remaining()
+                ):
                     if credit == self:
                         continue
                     for line in credit.invoice_line_ids.filtered(
@@ -814,9 +804,12 @@ class AccountMove(models.Model):
                     and same_price
                 ):
                     target_currency = remaining_currency
-                elif self.currency_id.compare_amounts(
-                    target_currency, remaining_currency
-                ) > 0:
+                elif (
+                    self.currency_id.compare_amounts(
+                        target_currency, remaining_currency
+                    )
+                    > 0
+                ):
                     target_currency = remaining_currency
                 amount_currency = target_currency * (
                     1.0 if credit_line.amount_currency >= 0.0 else -1.0
@@ -923,13 +916,14 @@ class AccountMove(models.Model):
         "reversed_entry_id",
     )
     def _compute_tax_totals(self):
-        super()._compute_tax_totals()
+        res = super()._compute_tax_totals()
         for move in self:
             if not move.tax_totals:
                 continue
             move.tax_totals = move._l10n_ve_align_refund_tax_totals_to_accounting(
                 move.tax_totals
             )
+        return res
 
     def write(self, vals):
         realign_moves = self.env["account.move"]
@@ -1063,9 +1057,7 @@ class AccountMove(models.Model):
         sum_tax_currency = sum(
             subtotal.get("tax_amount_currency", 0.0) for subtotal in subtotals
         )
-        sum_tax_company = sum(
-            subtotal.get("tax_amount", 0.0) for subtotal in subtotals
-        )
+        sum_tax_company = sum(subtotal.get("tax_amount", 0.0) for subtotal in subtotals)
         allocated_base_currency = 0.0
         allocated_base_company = 0.0
         allocated_tax_currency = 0.0
@@ -1104,15 +1096,11 @@ class AccountMove(models.Model):
                     sum_base_company, precision_rounding=company_cur.rounding
                 ):
                     ratio = subtotal.get("base_amount", 0.0) / sum_base_company
-                    subtotal["base_amount"] = company_cur.round(
-                        base_company * ratio
-                    )
+                    subtotal["base_amount"] = company_cur.round(base_company * ratio)
                 if not float_is_zero(
                     sum_tax_currency, precision_rounding=currency.rounding
                 ):
-                    ratio = (
-                        subtotal.get("tax_amount_currency", 0.0) / sum_tax_currency
-                    )
+                    ratio = subtotal.get("tax_amount_currency", 0.0) / sum_tax_currency
                     subtotal["tax_amount_currency"] = currency.round(
                         tax_currency * ratio
                     )
@@ -1125,13 +1113,15 @@ class AccountMove(models.Model):
                 allocated_base_company += subtotal.get("base_amount", 0.0)
                 allocated_tax_currency += subtotal.get("tax_amount_currency", 0.0)
                 allocated_tax_company += subtotal.get("tax_amount", 0.0)
-            groups = subtotal.get("tax_groups") or []
+            groups = [
+                group
+                for group in subtotal.get("tax_groups") or []
+                if group.get("involved_tax_ids")
+            ]
             group_tax_currency = sum(
                 group.get("tax_amount_currency", 0.0) for group in groups
             )
-            group_tax_company = sum(
-                group.get("tax_amount", 0.0) for group in groups
-            )
+            group_tax_company = sum(group.get("tax_amount", 0.0) for group in groups)
             for group in groups:
                 if len(groups) == 1:
                     group["base_amount_currency"] = subtotal["base_amount_currency"]
@@ -1175,11 +1165,7 @@ class AccountMove(models.Model):
             "l10n_ve_global_discount_amount_currency"
         )
         origin_gross_currency = origin_totals.get("l10n_ve_subtotal_gross_currency")
-        if (
-            full_mirror
-            and origin_discount_company
-            and origin_gross_company
-        ):
+        if full_mirror and origin_discount_company and origin_gross_company:
             discount_company = self.company_currency_id.round(origin_discount_company)
             gross_company = self.company_currency_id.round(origin_gross_company)
         else:
@@ -1271,9 +1257,7 @@ class AccountMove(models.Model):
                 price_unit = new_abs / quantity / discount_factor
                 amount_currency = company_cur.round(new_abs)
             else:
-                new_amount_currency = currency.round(
-                    abs(line.amount_currency) * ratio
-                )
+                new_amount_currency = currency.round(abs(line.amount_currency) * ratio)
                 price_unit = new_amount_currency / quantity / discount_factor
                 amount_currency = new_amount_currency
             if float_compare(price_unit, 0.0, precision_digits=price_prec) <= 0:
@@ -1311,7 +1295,6 @@ class AccountMove(models.Model):
                 )
             )
             self.message_post(body=" ".join(body_parts))
-
 
     def _l10n_ve_to_company_abs_amount(self):
         self.ensure_one()
@@ -1433,9 +1416,7 @@ class AccountMove(models.Model):
         term_lines.invalidate_recordset(["amount_currency", "balance"])
         after = document_cur.round(sum(term_lines.mapped("amount_currency")))
         return bool(
-            float_compare(
-                before, after, precision_rounding=document_cur.rounding
-            )
+            float_compare(before, after, precision_rounding=document_cur.rounding)
         )
 
     def _l10n_ve_repair_refund_currency_alignment_on_move(self):
@@ -1472,7 +1453,7 @@ class AccountMove(models.Model):
         return True
 
     def action_l10n_ve_repair_refund_currency_alignment(self):
-        """Repara NC en borrador con montos desalineados respecto a la factura origen."""
+        """Repara NC en borrador con montos desalineados frente a la factura origen."""
         eligible = self.filtered(lambda move: move._l10n_ve_refund_repair_eligible())
         posted = self.filtered(
             lambda move: move.move_type == "out_refund"
@@ -1553,4 +1534,3 @@ class AccountMove(models.Model):
             refunds._l10n_ve_lock_refund_invoice_currency_rate_from_origin()
             refunds._l10n_ve_align_refund_company_amounts_to_origin()
         return super().action_post()
-

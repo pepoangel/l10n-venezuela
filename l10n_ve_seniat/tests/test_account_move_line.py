@@ -1,5 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from lxml import etree
+
 from odoo import Command, fields
 from odoo.exceptions import ValidationError
 from odoo.tests import Form, tagged
@@ -373,6 +375,79 @@ class TestAccountMoveLine(L10nVeSeniatCommon):
             with debit_form.invoice_line_ids.edit(0) as line_form:
                 line_form.price_unit = 75.0
         self.assertEqual(line.price_unit, 75.0)
+
+    def test_out_debit_note_allows_changing_currency(self):
+        partner = self.env["res.partner"].create(
+            {
+                "name": "P ND moneda",
+                "country_id": self.env.ref("base.ve").id,
+                "vat": "J12345678",
+            }
+        )
+        self.company_data["default_journal_sale"].currency_id = False
+        invoice = self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": partner.id,
+                "invoice_date": fields.Date.today(),
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "name": "Line",
+                            "quantity": 1.0,
+                            "price_unit": 50.0,
+                            "account_id": self.company_data[
+                                "default_account_revenue"
+                            ].id,
+                            "tax_ids": [
+                                Command.set([self.company_data["default_tax_sale"].id])
+                            ],
+                        }
+                    )
+                ],
+            }
+        )
+        invoice.action_post()
+        invoice.l10n_ve_invoice_original_printed = True
+        other_currency = self.env.ref("base.USD")
+        if invoice.currency_id == other_currency:
+            other_currency = self.env.ref("base.EUR")
+        debit = self.env["account.move"].create(
+            {
+                "move_type": "out_invoice",
+                "partner_id": partner.id,
+                "invoice_date": fields.Date.today(),
+                "debit_origin_id": invoice.id,
+                "currency_id": invoice.currency_id.id,
+                "invoice_line_ids": [
+                    Command.create(
+                        {
+                            "name": "Line",
+                            "quantity": 1.0,
+                            "price_unit": 50.0,
+                            "account_id": self.company_data[
+                                "default_account_revenue"
+                            ].id,
+                            "tax_ids": [
+                                Command.set([self.company_data["default_tax_sale"].id])
+                            ],
+                        }
+                    )
+                ],
+            }
+        )
+        with Form(debit) as debit_form:
+            debit_form.currency_id = other_currency
+        self.assertEqual(debit.currency_id, other_currency)
+        form_arch = etree.fromstring(
+            self.env["account.move"].get_view(view_type="form")["arch"]
+        )
+        currency_node = form_arch.xpath(
+            "//div[@name='currency_div']/div[1]/field[@name='currency_id']"
+        )[0]
+        readonly = currency_node.get("readonly") or ""
+        self.assertIn("move_type == 'out_refund'", readonly)
+        self.assertNotIn("debit_origin_id", readonly)
 
     def test_subtotal_company_currency_entry_is_zero(self):
         move = self.env["account.move"].create(

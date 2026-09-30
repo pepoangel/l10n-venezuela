@@ -73,7 +73,9 @@ class TestL10nVeInvoiceEscp(L10nVeSeniatCommon):
 
     def test_line_context_company_currency_fields(self):
         move = self._invoice("Cliente moneda", "J12345676")
-        line = move.invoice_line_ids.filtered(lambda l: l.display_type == "product")[:1]
+        line = move.invoice_line_ids.filtered(
+            lambda aml: aml.display_type == "product"
+        )[:1]
         pl = line_context(move, line)["pl"]
         for name in (
             "price_unit_company_currency",
@@ -100,7 +102,9 @@ class TestL10nVeInvoiceEscp(L10nVeSeniatCommon):
         move = self._invoice("Cliente campos", "J12345677")
         _pages, texts = self._text(move, custom)
         self.assertNotIn("#ERR", texts[0])
-        line = move.invoice_line_ids.filtered(lambda l: l.display_type == "product")[:1]
+        line = move.invoice_line_ids.filtered(
+            lambda aml: aml.display_type == "product"
+        )[:1]
         self.assertIn(str(line.price_subtotal_currency).split(".")[0], texts[0])
 
     def test_default_report_layout(self):
@@ -179,7 +183,9 @@ class TestL10nVeInvoiceEscp(L10nVeSeniatCommon):
         self.assertEqual(print_action["tag"], "l10n_ve_escp_print")
         self.assertEqual(print_action["params"]["res_ids"], move.ids)
         Report = self.env["l10n.ve.escp.report"]
-        payload = Report.get_print_payload(self.report.id, "account.move", json.dumps(move.ids))
+        payload = Report.get_print_payload(
+            self.report.id, "account.move", json.dumps(move.ids)
+        )
         self.assertTrue(payload["payload_b64"])
         self.assertFalse(move.l10n_ve_invoice_original_printed)
         Report.confirm_printed(self.report.id, "account.move", move.ids)
@@ -212,7 +218,9 @@ class TestL10nVeInvoiceEscp(L10nVeSeniatCommon):
         journal = self.company_data["default_journal_sale"]
         self._l10n_ve_configure_journal_free(journal, print_medium="continuous")
         custom = self.report.copy({"name": "Personalizado"})
-        custom.band_ids.filtered(lambda b: b.band_type == "page_header").object_ids.filtered(
+        custom.band_ids.filtered(
+            lambda b: b.band_type == "page_header"
+        ).object_ids.filtered(
             lambda o: o.kind == "label" and o.text == "Razon Social :"
         ).write({"text": "Cliente :"})
         journal.l10n_ve_escp_report_id = custom
@@ -221,4 +229,6 @@ class TestL10nVeInvoiceEscp(L10nVeSeniatCommon):
         _pages, texts = self._text(move, custom)
         self.assertIn("Cliente :", texts[0])
         self.assertNotIn("Razon Social :", texts[0])
-        self.assertEqual(move.action_print_pdf()["context"]["default_report_id"], custom.id)
+        self.assertEqual(
+            move.action_print_pdf()["context"]["default_report_id"], custom.id
+        )

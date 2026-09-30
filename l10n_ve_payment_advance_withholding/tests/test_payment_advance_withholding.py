@@ -126,16 +126,20 @@ class TestPaymentAdvanceWithholding(L10nVeSeniatCommon):
                 }
             )
         )
-        activity = self.env["economic.activity"].sudo().create(
-            {
-                "name": "Actividad municipal advance",
-                "municipality_id": municipality.id,
-                "branch_id": branch.id,
-                "aliquot": 1.5,
-                "description": "Actividad de prueba",
-                "minimum_monthly": 0.0,
-                "minimum_annual": 0.0,
-            }
+        activity = (
+            self.env["economic.activity"]
+            .sudo()
+            .create(
+                {
+                    "name": "Actividad municipal advance",
+                    "municipality_id": municipality.id,
+                    "branch_id": branch.id,
+                    "aliquot": 1.5,
+                    "description": "Actividad de prueba",
+                    "minimum_monthly": 0.0,
+                    "minimum_annual": 0.0,
+                }
+            )
         )
         invoice_amount = invoice.amount_untaxed
         return self.env["account.retention"].create(

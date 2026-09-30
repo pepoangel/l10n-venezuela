@@ -81,11 +81,7 @@
                     string="Subtotal sin descuento (compañía)"
                     readonly="1"
                 />
-                <field
-                    name="l10n_ve_price_discount"
-                    string="Descuento"
-                    readonly="1"
-                />
+                <field name="l10n_ve_price_discount" string="Descuento" readonly="1" />
                 <field
                     name="l10n_ve_price_discount_currency"
                     string="Descuento (compañía)"

@@ -98,10 +98,11 @@ class AccountMoveLine(models.Model):
 
     def write(self, vals):
         refund_moves = self.env["account.move"]
-        if (
-            not self.env.context.get("l10n_ve_skip_refund_realign")
-            and {"quantity", "price_unit", "discount"} & set(vals)
-        ):
+        if not self.env.context.get("l10n_ve_skip_refund_realign") and {
+            "quantity",
+            "price_unit",
+            "discount",
+        } & set(vals):
             refund_moves = self.move_id.filtered(
                 lambda move: move.state == "draft"
                 and move.move_type == "out_refund"
@@ -119,6 +120,8 @@ class AccountMoveLine(models.Model):
             )._l10n_ve_realign_refund_on_draft_line_change()
         if self.env.context.get("l10n_ve_skip_exempt_tax_line"):
             return res
+        if not set(vals) & self._l10n_ve_tax_sync_trigger_fields():
+            return res
         for record in self:
             if record.move_id.move_type == "entry":
                 continue
@@ -132,6 +135,17 @@ class AccountMoveLine(models.Model):
             record._l10n_ve_apply_exempt_tax_no_product_line()
             record._put_unique_tax_per_line()
         return res
+
+    @api.model
+    def _l10n_ve_tax_sync_trigger_fields(self):
+        return {
+            "tax_ids",
+            "product_id",
+            "display_type",
+            "price_unit",
+            "quantity",
+            "move_id",
+        }
 
     def _validate_line_unit_price_ve(self):
         """Valida precio unitario distinto de cero en líneas fiscales venezolanas.
